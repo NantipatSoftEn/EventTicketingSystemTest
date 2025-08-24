@@ -1,13 +1,26 @@
 """
-Sample data creation script for Event Ticketing System
+Sample data creation script for Clean Architecture Event Ticketing System
 Creates sample users, events, bookings, and tickets for testing purposes
 """
 
 import asyncio
+import sys
+import os
 from datetime import datetime, timedelta
 from decimal import Decimal
-from database import init_db, close_db
-from models import User, Event, Booking, Ticket, UserRole, EventStatus, BookingStatus, TicketStatus
+
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.infrastructure.database.connection import init_db, close_db
+from src.infrastructure.database.models.user_model import UserModel
+from src.infrastructure.database.models.event_model import EventModel
+from src.infrastructure.database.models.booking_model import BookingModel
+from src.infrastructure.database.models.ticket_model import TicketModel
+from src.domain.entities.user import UserRole
+from src.domain.entities.event import EventStatus
+from src.domain.entities.booking import BookingStatus
+from src.domain.entities.ticket import TicketStatus
 import secrets
 import string
 
@@ -20,17 +33,17 @@ def generate_ticket_code() -> str:
 
 
 async def create_sample_data():
-    """Create comprehensive sample data for the event ticketing system"""
-    print("🚀 Starting sample data creation...")
+    """Create comprehensive sample data for the clean architecture event ticketing system"""
+    print("🚀 Starting Clean Architecture sample data creation...")
     
     # Initialize database
     await init_db()
     
     # Clear existing data
-    await Ticket.all().delete()
-    await Booking.all().delete()
-    await Event.all().delete()
-    await User.all().delete()
+    await TicketModel.all().delete()
+    await BookingModel.all().delete()
+    await EventModel.all().delete()
+    await UserModel.all().delete()
     
     print("📝 Creating sample users...")
     
@@ -65,7 +78,7 @@ async def create_sample_data():
     
     created_users = []
     for user_data in users_data:
-        user = await User.create(**user_data)
+        user = await UserModel.create(**user_data)
         created_users.append(user)
         print(f"   ✅ Created user: {user.name} ({user.role})")
     
@@ -123,7 +136,7 @@ async def create_sample_data():
     
     created_events = []
     for event_data in events_data:
-        event = await Event.create(**event_data)
+        event = await EventModel.create(**event_data)
         created_events.append(event)
         print(f"   ✅ Created event: {event.title} at {event.venue}")
     
@@ -166,10 +179,10 @@ async def create_sample_data():
     created_bookings = []
     for booking_data in bookings_data:
         # Get event to calculate total amount
-        event = await Event.get(id=booking_data["event_id"])
+        event = await EventModel.get(id=booking_data["event_id"])
         total_amount = event.price * booking_data["quantity"]
         
-        booking = await Booking.create(
+        booking = await BookingModel.create(
             user_id=booking_data["user_id"],
             event_id=booking_data["event_id"],
             quantity=booking_data["quantity"],
@@ -179,7 +192,7 @@ async def create_sample_data():
         created_bookings.append(booking)
         
         # Get user and event names for display
-        user = await User.get(id=booking_data["user_id"])
+        user = await UserModel.get(id=booking_data["user_id"])
         print(f"   ✅ Created booking: {user.name} -> {event.title} (Qty: {booking_data['quantity']})")
     
     print("\n🎟️ Creating sample tickets...")
@@ -190,10 +203,10 @@ async def create_sample_data():
         for i in range(booking.quantity):
             # Generate unique ticket code
             ticket_code = generate_ticket_code()
-            while await Ticket.filter(ticket_code=ticket_code).exists():
+            while await TicketModel.filter(ticket_code=ticket_code).exists():
                 ticket_code = generate_ticket_code()
             
-            await Ticket.create(
+            await TicketModel.create(
                 booking_id=booking.id,
                 ticket_code=ticket_code,
                 status=TicketStatus.ACTIVE
@@ -205,7 +218,7 @@ async def create_sample_data():
     # Create some cancelled bookings for testing
     print("\n❌ Creating cancelled booking examples...")
     
-    cancelled_booking = await Booking.create(
+    cancelled_booking = await BookingModel.create(
         user_id=created_users[3].id,  # Bob Johnson
         event_id=created_events[1].id,  # Tech Conference
         quantity=2,
@@ -216,10 +229,10 @@ async def create_sample_data():
     # Create cancelled tickets
     for i in range(2):
         ticket_code = generate_ticket_code()
-        while await Ticket.filter(ticket_code=ticket_code).exists():
+        while await TicketModel.filter(ticket_code=ticket_code).exists():
             ticket_code = generate_ticket_code()
         
-        await Ticket.create(
+        await TicketModel.create(
             booking_id=cancelled_booking.id,
             ticket_code=ticket_code,
             status=TicketStatus.CANCELLED
@@ -228,32 +241,42 @@ async def create_sample_data():
     print(f"   ✅ Created cancelled booking example")
     
     # Print summary
-    print("\n📊 Sample Data Summary:")
-    print("========================")
+    print("\n📊 Clean Architecture Sample Data Summary:")
+    print("==========================================")
     
-    total_users = await User.all().count()
-    total_events = await Event.all().count()
-    total_bookings = await Booking.all().count()
-    total_tickets = await Ticket.all().count()
+    total_users = await UserModel.all().count()
+    total_events = await EventModel.all().count()
+    total_bookings = await BookingModel.all().count()
+    total_tickets = await TicketModel.all().count()
     
     print(f"👥 Users: {total_users}")
-    print(f"   - Customers: {await User.filter(role=UserRole.CUSTOMER).count()}")
-    print(f"   - Admins: {await User.filter(role=UserRole.ADMIN).count()}")
+    print(f"   - Customers: {await UserModel.filter(role=UserRole.CUSTOMER).count()}")
+    print(f"   - Admins: {await UserModel.filter(role=UserRole.ADMIN).count()}")
     
     print(f"🎫 Events: {total_events}")
-    print(f"   - Active: {await Event.filter(status=EventStatus.ACTIVE).count()}")
-    print(f"   - Completed: {await Event.filter(status=EventStatus.COMPLETED).count()}")
+    print(f"   - Active: {await EventModel.filter(status=EventStatus.ACTIVE).count()}")
+    print(f"   - Completed: {await EventModel.filter(status=EventStatus.COMPLETED).count()}")
     
     print(f"📅 Bookings: {total_bookings}")
-    print(f"   - Confirmed: {await Booking.filter(status=BookingStatus.CONFIRMED).count()}")
-    print(f"   - Cancelled: {await Booking.filter(status=BookingStatus.CANCELLED).count()}")
+    print(f"   - Confirmed: {await BookingModel.filter(status=BookingStatus.CONFIRMED).count()}")
+    print(f"   - Cancelled: {await BookingModel.filter(status=BookingStatus.CANCELLED).count()}")
     
     print(f"🎟️ Tickets: {total_tickets}")
-    print(f"   - Active: {await Ticket.filter(status=TicketStatus.ACTIVE).count()}")
-    print(f"   - Cancelled: {await Ticket.filter(status=TicketStatus.CANCELLED).count()}")
+    print(f"   - Active: {await TicketModel.filter(status=TicketStatus.ACTIVE).count()}")
+    print(f"   - Cancelled: {await TicketModel.filter(status=TicketStatus.CANCELLED).count()}")
     
-    print("\n✨ Sample data creation completed successfully!")
-    print("🚀 You can now start the API server with: fastapi dev main.py")
+    print("\n🏗️ Clean Architecture Features:")
+    print("   ✅ Domain-driven design with rich entities")
+    print("   ✅ Repository pattern with abstractions")
+    print("   ✅ Use cases for application logic")
+    print("   ✅ Dependency injection container")
+    print("   ✅ Separation of concerns across layers")
+    print("   ✅ Clean API with proper error handling")
+    
+    print("\n✨ Clean Architecture sample data creation completed successfully!")
+    print("🚀 You can now start the API server with: python -m uvicorn src.main:app --reload")
+    print("📚 API Documentation available at: http://localhost:8000/docs")
+    print("🏗️ Architecture info available at: http://localhost:8000/api/architecture")
     
     # Close database connection
     await close_db()
