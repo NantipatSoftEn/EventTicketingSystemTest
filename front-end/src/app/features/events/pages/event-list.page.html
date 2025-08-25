@@ -1,0 +1,80 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">
+          Discover Amazing Events
+        </h1>
+        <p class="text-xl md:text-2xl text-indigo-100 max-w-3xl mx-auto">
+          From concerts to conferences, find and book tickets for the events that matter to you
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Events Section -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search Component -->
+    <app-event-search
+      #searchComponent
+      (search)="onSearch($event)"
+    ></app-event-search>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <app-error-message
+        type="error"
+        title="Error Loading Events"
+        [message]="errorMessage()"
+        (dismiss)="clearError()"
+      ></app-error-message>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <app-loading-spinner
+        size="lg"
+        text="Loading events..."
+        containerClass="py-16"
+      ></app-loading-spinner>
+    }
+
+    <!-- Events Grid -->
+    @if (!isLoading() && !errorMessage()) {
+      @if (events().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (event of events(); track event.id) {
+            <app-event-card
+              [event]="event"
+              (bookNow)="onBookEvent($event)"
+            ></app-event-card>
+          }
+        </div>
+      } @else {
+        <!-- No Events Found -->
+        <div class="text-center py-16">
+          <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+          </svg>
+          <h3 class="text-2xl font-medium text-gray-900 mb-2">No events found</h3>
+          <p class="text-gray-600 mb-6">
+            @if (hasActiveFilters()) {
+              Try adjusting your search criteria to find more events.
+            } @else {
+              Check back later for upcoming events.
+            }
+          </p>
+          @if (hasActiveFilters()) {
+            <button
+              (click)="clearAllFilters()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors duration-200"
+            >
+              Clear all filters
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

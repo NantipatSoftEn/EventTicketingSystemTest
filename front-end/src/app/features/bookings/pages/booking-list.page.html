@@ -1,0 +1,181 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
+      <p class="text-gray-600">View and manage your event bookings</p>
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <app-error-message
+        type="error"
+        title="Error Loading Bookings"
+        [message]="errorMessage()"
+        (dismiss)="clearError()"
+      ></app-error-message>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <app-loading-spinner
+        size="lg"
+        text="Loading your bookings..."
+        containerClass="py-16"
+      ></app-loading-spinner>
+    }
+
+    <!-- Bookings List -->
+    @if (!isLoading() && !errorMessage()) {
+      @if (bookings().length > 0) {
+        <div class="space-y-6">
+          @for (booking of bookings(); track booking.id) {
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <!-- Booking Info -->
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h3 class="text-xl font-semibold text-gray-900 mr-3">
+                        {{ booking.event?.title || 'Event Title' }}
+                      </h3>
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        [ngClass]="{
+                          'bg-green-100 text-green-800': booking.status === 'CONFIRMED',
+                          'bg-yellow-100 text-yellow-800': booking.status === 'PENDING',
+                          'bg-red-100 text-red-800': booking.status === 'CANCELLED'
+                        }"
+                      >
+                        {{ booking.status }}
+                      </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span class="font-medium">Booking Code:</span>
+                        <span class="ml-1 font-mono">{{ booking.bookingCode }}</span>
+                      </div>
+                      <div>
+                        <span class="font-medium">Quantity:</span>
+                        <span class="ml-1">{{ booking.quantity }} ticket{{ booking.quantity > 1 ? 's' : '' }}</span>
+                      </div>
+                      <div>
+                        <span class="font-medium">Total Price:</span>
+                        <span class="ml-1 font-semibold text-gray-900">${{ booking.totalPrice }}</span>
+                      </div>
+                    </div>
+
+                    @if (booking.event) {
+                      <div class="mt-2 text-sm text-gray-600">
+                        <div class="flex items-center">
+                          <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+                          </svg>
+                          {{ formatDate(booking.event.date) }}
+                        </div>
+                        <div class="flex items-center mt-1">
+                          <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {{ booking.event.venue }}
+                        </div>
+                      </div>
+                    }
+
+                    <div class="mt-2 text-xs text-gray-500">
+                      Booked on {{ formatDate(booking.createdAt) }}
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="mt-4 md:mt-0 md:ml-6 flex flex-col md:flex-row gap-2">
+                    <button
+                      [routerLink]="['/bookings', booking.id]"
+                      class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      View Details
+                    </button>
+
+                    @if (booking.status === 'CONFIRMED' && canCancel(booking)) {
+                      <button
+                        (click)="confirmCancellation(booking)"
+                        class="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 transition-colors duration-200"
+                      >
+                        Cancel Booking
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- No Bookings -->
+        <div class="text-center py-16">
+          <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1V7a2 2 0 00-2-2H5zM5 14a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1v-3a2 2 0 00-2-2H5z" />
+          </svg>
+          <h3 class="text-2xl font-medium text-gray-900 mb-2">No bookings yet</h3>
+          <p class="text-gray-600 mb-6">
+            You haven't booked any events yet. Start exploring and book your first event!
+          </p>
+          <a
+            routerLink="/events"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200"
+          >
+            Browse Events
+          </a>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Cancellation Modal -->
+@if (showCancelModal()) {
+  <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+          <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Cancel Booking</h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500">
+            Are you sure you want to cancel this booking? This action cannot be undone.
+          </p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button
+            (click)="cancelBooking()"
+            [disabled]="isCancelling()"
+            class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:bg-gray-400"
+          >
+            @if (isCancelling()) {
+              <span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke-width="4" stroke-dasharray="32" stroke-dashoffset="16"></circle>
+                </svg>
+                Cancelling...
+              </span>
+            } @else {
+              Yes, Cancel Booking
+            }
+          </button>
+          <button
+            (click)="closeCancelModal()"
+            [disabled]="isCancelling()"
+            class="mt-3 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:bg-gray-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
