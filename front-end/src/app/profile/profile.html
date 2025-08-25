@@ -1,0 +1,22 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-avatar">
+      <img src="https://via.placeholder.com/100x100/667eea/ffffff?text=User" alt="Profile Picture" />
+    </div>
+    <div class="profile-info">
+      <h3>{{ user.name }}</h3>
+      <p class="email">{{ user.email }}</p>
+      <p class="member-since">Member since {{ user.memberSince }}</p>
+    </div>
+    <div class="profile-stats">
+      <div class="stat">
+        <span class="stat-number">{{ user.eventsAttended }}</span>
+        <span class="stat-label">Events Attended</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">{{ user.ticketsBooked }}</span>
+        <span class="stat-label">Tickets Booked</span>
+      </div>
+    </div>
+  </div>
+</div>
