@@ -232,7 +232,7 @@ export class BookingService {
     if (this.devModeService.isDevMode) {
       return this.cancelMockBooking(bookingId);
     } else {
-      return this.apiService.updateBookingStatus(bookingId, BookingStatus.CANCELLED).pipe(
+      return this.apiService.updateBookingStatus(bookingId, 'cancelled').pipe(
         map(() => true),
         catchError(error => {
           console.error('Error cancelling booking via API:', error);

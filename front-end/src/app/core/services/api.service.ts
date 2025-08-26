@@ -157,8 +157,9 @@ export class ApiService {
   }
 
   updateBookingStatus(bookingId: string, status: string): Observable<any> {
+    const params = new HttpParams().set('status', status);
     return this.handleResponse(
-      this.http.put<ApiResponse<any>>(`${this.baseUrl}/bookings/${bookingId}/status`, { status })
+      this.http.put<ApiResponse<any>>(`${this.baseUrl}/bookings/${bookingId}/status`, null, { params })
     );
   }
 
