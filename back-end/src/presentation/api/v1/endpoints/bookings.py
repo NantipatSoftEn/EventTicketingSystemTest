@@ -55,7 +55,7 @@ async def get_event_bookings(event_id: int, admin_user_id: int = 1):
     )
 
 
-@router.get("/event/{event_id}/stats", response_model=dict)
+@router.get("/event/{event_id}/stats", response_model=ApiResponse[dict])
 async def get_booking_stats(event_id: int):
     """Get booking statistics for a specific event"""
     stats = await container.booking_controller.get_booking_stats(event_id)
