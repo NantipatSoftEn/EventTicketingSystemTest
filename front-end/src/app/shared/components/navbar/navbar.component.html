@@ -11,17 +11,17 @@
       <!-- Desktop Navigation -->
       <div class="hidden md:block">
         <div class="ml-10 flex items-baseline space-x-4">
-          <a routerLink="/" 
+          <a routerLink="/"
              class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
              routerLinkActive="text-blue-600 bg-blue-50">
             Home
           </a>
-          <a routerLink="/events" 
+          <a routerLink="/events"
              class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
              routerLinkActive="text-blue-600 bg-blue-50">
             Events
           </a>
-          <a routerLink="/my-bookings" 
+          <a routerLink="/my-bookings"
              class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
              routerLinkActive="text-blue-600 bg-blue-50">
             My Bookings
@@ -41,7 +41,7 @@
 
       <!-- Mobile menu button -->
       <div class="md:hidden">
-        <button (click)="toggleMobileMenu()" 
+        <button (click)="toggleMobileMenu()"
                 class="text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600 transition-colors">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path *ngIf="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -54,19 +54,19 @@
     <!-- Mobile Navigation Menu -->
     <div class="md:hidden" [class.hidden]="!isMobileMenuOpen">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
-        <a routerLink="/" 
+        <a routerLink="/"
            class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors"
            routerLinkActive="text-blue-600 bg-blue-50"
            (click)="closeMobileMenu()">
           Home
         </a>
-        <a routerLink="/events" 
+        <a routerLink="/events"
            class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors"
            routerLinkActive="text-blue-600 bg-blue-50"
            (click)="closeMobileMenu()">
           Events
         </a>
-        <a routerLink="/my-bookings" 
+        <a routerLink="/my-bookings"
            class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors"
            routerLinkActive="text-blue-600 bg-blue-50"
            (click)="closeMobileMenu()">
