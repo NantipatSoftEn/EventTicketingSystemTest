@@ -1,27 +1,26 @@
 """
 Clean Architecture FastAPI Application
-Event Ticketing System with proper separation of concerns
+Event Ticketing System with proper separation of concerns and API versioning
 """
 
 from typing import List
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status, Depends, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 
 # Infrastructure
 from src.infrastructure.database.connection import init_db, close_db
 
+# API versioning
+from src.presentation.api.v1.router import api_v1_router
+from src.presentation.api.versioning import create_version_info_endpoint
+
 # Presentation schemas
-from src.presentation.schemas.user_schemas import UserCreateSchema, UserResponseSchema
-from src.presentation.schemas.event_schemas import EventCreateSchema, EventResponseSchema
-from src.presentation.schemas.booking_schemas import (
-    BookingCreateSchema, BookingResponseSchema, BookingWithDetailsSchema
-)
+from src.presentation.schemas.api_response_schemas import ApiResponse
 
-# Domain entities
-from src.domain.entities.booking import BookingStatus
-
-# Dependency injection
-from src.container import container
+# Response utilities
+from src.presentation.utils.response_utils import prepare_response_data
 
 
 @asynccontextmanager
@@ -35,102 +34,105 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Event Ticketing System API - Clean Architecture",
-    description="A comprehensive event ticketing system built with Clean Architecture principles",
+    description="A comprehensive event ticketing system built with Clean Architecture principles and API versioning",
     version="2.0.0",
     lifespan=lifespan
 )
 
 
+# Exception handlers for consistent API responses
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with consistent response format"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "message": exc.detail,
+            "data": None
+        }
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with consistent response format"""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "message": "Validation error",
+            "data": {
+                "errors": exc.errors()
+            }
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle general exceptions with consistent response format"""
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "message": "Internal server error",
+            "data": None
+        }
+    )
+
+
+# Include API versioning routers
+app.include_router(api_v1_router, prefix="/api/v1")
+
+# Include version info endpoint
+version_router = create_version_info_endpoint()
+app.include_router(version_router)
+
+
 # Health check endpoints
-@app.get("/")
+@app.get("/", response_model=ApiResponse[dict])
 def read_root():
-    return {
+    data = {
         "message": "Event Ticketing System API - Clean Architecture",
         "version": "2.0.0",
         "status": "active",
-        "architecture": "Clean Architecture with Domain-Driven Design"
+        "architecture": "Clean Architecture with Domain-Driven Design",
+        "api_versions": {
+            "current": "v1",
+            "available": ["v1"],
+            "endpoints": {
+                "v1": "/api/v1",
+                "docs": "/docs",
+                "health": "/health"
+            }
+        }
     }
+    return ApiResponse.success_response(
+        data=data,
+        message="Welcome to Event Ticketing System API"
+    )
 
 
-@app.get("/health")
+@app.get("/health", response_model=ApiResponse[dict])
 def health_check():
-    return {"status": "healthy", "architecture": "clean"}
-
-
-# User endpoints
-@app.post("/api/users", response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED)
-async def create_user(user_data: UserCreateSchema):
-    """Create a new user"""
-    return await container.user_controller.create_user(user_data)
-
-
-@app.get("/api/users", response_model=List[UserResponseSchema])
-async def list_users():
-    """Get all users"""
-    return await container.user_controller.get_all_users()
-
-
-@app.get("/api/users/{user_id}", response_model=UserResponseSchema)
-async def get_user(user_id: int):
-    """Get user by ID"""
-    return await container.user_controller.get_user_by_id(user_id)
-
-
-# Event endpoints
-@app.post("/api/events", response_model=EventResponseSchema, status_code=status.HTTP_201_CREATED)
-async def create_event(event_data: EventCreateSchema, admin_user_id: int = 1):
-    """Create a new event (admin only)"""
-    return await container.event_controller.create_event(event_data, admin_user_id)
-
-
-@app.get("/api/events", response_model=List[EventResponseSchema])
-async def list_events():
-    """Get all events"""
-    return await container.event_controller.get_all_events()
-
-
-@app.get("/api/events/{event_id}", response_model=EventResponseSchema)
-async def get_event(event_id: int):
-    """Get event by ID"""
-    return await container.event_controller.get_event_by_id(event_id)
-
-
-@app.put("/api/events/{event_id}", response_model=EventResponseSchema)
-async def update_event(event_id: int, event_data: EventCreateSchema, admin_user_id: int = 1):
-    """Update event by ID (admin only)"""
-    return await container.event_controller.update_event(event_id, event_data, admin_user_id)
-
-
-# Booking endpoints
-@app.post("/api/bookings", response_model=BookingResponseSchema, status_code=status.HTTP_201_CREATED)
-async def create_booking(booking_data: BookingCreateSchema):
-    """Create a new booking with automatic ticket generation"""
-    return await container.booking_controller.create_booking(booking_data)
-
-
-@app.get("/api/bookings/user/{user_id}", response_model=List[BookingWithDetailsSchema])
-async def get_user_bookings(user_id: int):
-    """Get bookings for a specific user with full details"""
-    return await container.booking_controller.get_user_bookings(user_id)
-
-
-@app.get("/api/bookings/event/{event_id}", response_model=List[BookingWithDetailsSchema])
-async def get_event_bookings(event_id: int, admin_user_id: int = 1):
-    """Get bookings for a specific event with full details (admin only)"""
-    return await container.booking_controller.get_event_bookings(event_id, admin_user_id)
-
-
-@app.put("/api/bookings/{booking_id}/status", response_model=BookingResponseSchema)
-async def update_booking_status(booking_id: int, status: BookingStatus):
-    """Update booking status (automatically handles ticket status updates)"""
-    return await container.booking_controller.update_booking_status(booking_id, status)
+    data = {
+        "status": "healthy", 
+        "architecture": "clean",
+        "version": "2.0.0",
+        "api_version": "v1"
+    }
+    return ApiResponse.success_response(
+        data=data,
+        message="System is healthy"
+    )
 
 
 # Additional utility endpoints
-@app.get("/api/architecture")
+@app.get("/api/v1/architecture", response_model=ApiResponse[dict])
 def get_architecture_info():
     """Get information about the clean architecture implementation"""
-    return {
+    data = {
         "architecture": "Clean Architecture",
         "layers": {
             "domain": {
@@ -163,8 +165,17 @@ def get_architecture_info():
             "Flexibility",
             "Independence from frameworks",
             "Clear separation of concerns"
-        ]
+        ],
+        "api_versioning": {
+            "strategy": "URL versioning",
+            "current_version": "v1",
+            "version_format": "/api/v{version}"
+        }
     }
+    return ApiResponse.success_response(
+        data=data,
+        message="Architecture information retrieved successfully"
+    )
 
 
 if __name__ == "__main__":
