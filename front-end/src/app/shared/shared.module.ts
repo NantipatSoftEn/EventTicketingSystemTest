@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { LayoutComponent } from './components/layout/layout.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { UserSelectorComponent } from './components/user-selector/user-selector.component';
 
 @NgModule({
   declarations: [],
@@ -12,12 +13,14 @@ import { FooterComponent } from './components/footer/footer.component';
     RouterModule,
     LayoutComponent,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    UserSelectorComponent
   ],
   exports: [
     LayoutComponent,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    UserSelectorComponent
   ]
 })
 export class SharedModule { }
