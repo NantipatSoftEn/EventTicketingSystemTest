@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Event, EventFilters } from '../../core/models/event.model';
 import { EventService } from '../../core/services/event.service';
+import { DevModeToggleComponent } from '../../shared/components/dev-mode-toggle/dev-mode-toggle.component';
 
 @Component({
   selector: 'app-event-list',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, DevModeToggleComponent],
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.css'
 })
@@ -37,12 +38,12 @@ export class EventListComponent implements OnInit {
   loadEvents(): void {
     this.isLoading = true;
     this.eventService.getEvents().subscribe({
-      next: (events) => {
+      next: (events: Event[]) => {
         this.events = events;
         this.filteredEvents = events;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading events:', error);
         this.isLoading = false;
       }
@@ -51,10 +52,10 @@ export class EventListComponent implements OnInit {
 
   loadCategories(): void {
     this.eventService.getCategories().subscribe({
-      next: (categories) => {
+      next: (categories: string[]) => {
         this.categories = categories;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading categories:', error);
       }
     });
@@ -62,10 +63,10 @@ export class EventListComponent implements OnInit {
 
   loadVenues(): void {
     this.eventService.getVenues().subscribe({
-      next: (venues) => {
+      next: (venues: string[]) => {
         this.venues = venues;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading venues:', error);
       }
     });
@@ -92,11 +93,11 @@ export class EventListComponent implements OnInit {
     }
 
     this.eventService.getEvents(activeFilters).subscribe({
-      next: (events) => {
+      next: (events: Event[]) => {
         this.filteredEvents = events;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error filtering events:', error);
         this.isLoading = false;
       }

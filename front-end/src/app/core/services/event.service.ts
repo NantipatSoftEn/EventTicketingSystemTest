@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, map } from 'rxjs';
+import { Observable, of, delay, map, catchError } from 'rxjs';
 import { Event, EventFilters } from '../models/event.model';
+import { ApiService } from './api.service';
+import { DevModeService } from './dev-mode.service';
 
 @Injectable({
   providedIn: 'root'
@@ -99,7 +101,89 @@ export class EventService {
     }
   ];
 
+  constructor(
+    private apiService: ApiService,
+    private devModeService: DevModeService
+  ) {}
+
   getEvents(filters?: EventFilters): Observable<Event[]> {
+    if (this.devModeService.isDevMode) {
+      return this.getMockEvents(filters);
+    } else {
+      return this.getApiEvents(filters);
+    }
+  }
+
+  getEventById(id: string): Observable<Event | undefined> {
+    if (this.devModeService.isDevMode) {
+      return this.getMockEventById(id);
+    } else {
+      return this.getApiEventById(id);
+    }
+  }
+
+  createEvent(event: Omit<Event, 'id' | 'createdAt'>): Observable<Event> {
+    if (this.devModeService.isDevMode) {
+      return this.createMockEvent(event);
+    } else {
+      return this.apiService.createEvent(event);
+    }
+  }
+
+  updateEvent(id: string, event: Partial<Event>): Observable<Event | null> {
+    if (this.devModeService.isDevMode) {
+      return this.updateMockEvent(id, event);
+    } else {
+      return this.apiService.updateEvent(id, event).pipe(
+        catchError(() => of(null))
+      );
+    }
+  }
+
+  getCategories(): Observable<string[]> {
+    if (this.devModeService.isDevMode) {
+      const categories = [...new Set(this.mockEvents.map(event => event.category))];
+      return of(categories);
+    } else {
+      // For API mode, we'll extract categories from the fetched events
+      return this.getApiEvents().pipe(
+        map(events => [...new Set(events.map(event => event.category))]),
+        catchError(() => of([]))
+      );
+    }
+  }
+
+  getVenues(): Observable<string[]> {
+    if (this.devModeService.isDevMode) {
+      const venues = [...new Set(this.mockEvents.map(event => event.venue))];
+      return of(venues);
+    } else {
+      // For API mode, we'll extract venues from the fetched events
+      return this.getApiEvents().pipe(
+        map(events => [...new Set(events.map(event => event.venue))]),
+        catchError(() => of([]))
+      );
+    }
+  }
+
+  // Method to reduce available tickets (used during booking)
+  reduceAvailableTickets(eventId: string, quantity: number): Observable<boolean> {
+    if (this.devModeService.isDevMode) {
+      const event = this.mockEvents.find(e => e.id === eventId);
+      if (event && event.availableTickets >= quantity) {
+        event.availableTickets -= quantity;
+        return of(true).pipe(delay(300));
+      }
+      return of(false);
+    } else {
+      // For API mode, this would typically involve a specific endpoint
+      // For now, we'll simulate success
+      return of(true).pipe(delay(300));
+    }
+  }
+
+  // Private methods for mock data
+  private getMockEvents(filters?: EventFilters): Observable<Event[]> {
     let filteredEvents = this.mockEvents.filter(event => event.isActive);
 
     if (filters) {
@@ -140,22 +224,12 @@ export class EventService {
     return of(filteredEvents).pipe(delay(500)); // Simulate API delay
   }
 
-  getEventById(id: string): Observable<Event | undefined> {
+  private getMockEventById(id: string): Observable<Event | undefined> {
     const event = this.mockEvents.find(e => e.id === id);
     return of(event).pipe(delay(300));
   }
 
-  getCategories(): Observable<string[]> {
-    const categories = [...new Set(this.mockEvents.map(event => event.category))];
-    return of(categories);
-  }
-
-  getVenues(): Observable<string[]> {
-    const venues = [...new Set(this.mockEvents.map(event => event.venue))];
-    return of(venues);
-  }
-
-  createEvent(event: Omit<Event, 'id' | 'createdAt'>): Observable<Event> {
+  private createMockEvent(event: Omit<Event, 'id' | 'createdAt'>): Observable<Event> {
     const newEvent: Event = {
       ...event,
       id: (this.mockEvents.length + 1).toString(),
@@ -165,7 +239,7 @@ export class EventService {
     return of(newEvent).pipe(delay(500));
   }
 
-  updateEvent(id: string, event: Partial<Event>): Observable<Event | null> {
+  private updateMockEvent(id: string, event: Partial<Event>): Observable<Event | null> {
     const index = this.mockEvents.findIndex(e => e.id === id);
     if (index !== -1) {
       this.mockEvents[index] = { ...this.mockEvents[index], ...event };
@@ -174,13 +248,25 @@ export class EventService {
     return of(null);
   }
 
-  // Method to reduce available tickets (used during booking)
-  reduceAvailableTickets(eventId: string, quantity: number): Observable<boolean> {
-    const event = this.mockEvents.find(e => e.id === eventId);
-    if (event && event.availableTickets >= quantity) {
-      event.availableTickets -= quantity;
-      return of(true).pipe(delay(300));
-    }
-    return of(false);
+  // Private methods for API data
+  private getApiEvents(filters?: EventFilters): Observable<Event[]> {
+    return this.apiService.getEvents(filters).pipe(
+      catchError(error => {
+        console.error('Error fetching events from API:', error);
+        // Fallback to mock data if API fails
+        return this.getMockEvents(filters);
+      })
+    );
+  }
+
+  private getApiEventById(id: string): Observable<Event | undefined> {
+    return this.apiService.getEventById(id).pipe(
+      map(event => event || undefined),
+      catchError(error => {
+        console.error('Error fetching event from API:', error);
+        // Fallback to mock data if API fails
+        return this.getMockEventById(id);
+      })
+    );
   }
 }
