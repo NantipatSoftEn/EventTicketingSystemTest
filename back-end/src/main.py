@@ -7,6 +7,7 @@ from typing import List
 from fastapi import FastAPI, HTTPException, status, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 # Infrastructure
@@ -37,6 +38,15 @@ app = FastAPI(
     description="A comprehensive event ticketing system built with Clean Architecture principles and API versioning",
     version="2.0.0",
     lifespan=lifespan
+)
+
+# Configure CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],  # Angular dev server
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 

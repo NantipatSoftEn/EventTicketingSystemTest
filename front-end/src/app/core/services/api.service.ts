@@ -112,7 +112,7 @@ export class ApiService {
       apiEvent.date_time = dateTime.toISOString();
     }
     if (event.totalTickets) apiEvent.capacity = event.totalTickets;
-    if (event.price) apiEvent.price = event.price.toString();
+    if (event.price) apiEvent.price = event.price; // Keep as number, not string
     if (event.isActive !== undefined) apiEvent.status = event.isActive ? 'active' : 'inactive';
 
     return apiEvent;
