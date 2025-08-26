@@ -6,11 +6,13 @@ import { Event } from '../../core/models/event.model';
 import { BookingService } from '../../core/services/booking.service';
 import { EventService } from '../../core/services/event.service';
 import { AuthService } from '../../core/services/auth.service';
+import { UserSelectorComponent } from '../../shared/components/user-selector/user-selector.component';
+import { User as UserServiceUser } from '../../core/services/user.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-user-dashboard',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, UserSelectorComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrl: './user-dashboard.component.css'
 })
@@ -18,6 +20,7 @@ export class UserDashboardComponent implements OnInit {
   bookings: Booking[] = [];
   events: { [eventId: string]: Event } = {};
   isLoading = false;
+  selectedUser: UserServiceUser | null = null;
 
   constructor(
     private bookingService: BookingService,
@@ -26,17 +29,30 @@ export class UserDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadUserBookings();
+    // Don't load bookings initially, wait for user selection
   }
 
-  loadUserBookings(): void {
-    this.isLoading = true;
-    const currentUser = this.authService.getCurrentUser();
+  onUserSelected(user: UserServiceUser | null): void {
+    this.selectedUser = user;
+    if (user) {
+      this.loadUserBookings(user.id);
+    } else {
+      this.bookings = [];
+      this.events = {};
+    }
+  }
 
-    this.bookingService.getUserBookings(currentUser?.id ? Number(currentUser.id) : undefined).subscribe({
+  loadUserBookings(userId?: number): void {
+    this.isLoading = true;
+    console.log('Loading bookings for user ID:', userId);
+
+    this.bookingService.getUserBookings(userId).subscribe({
       next: (bookings) => {
         this.bookings = bookings;
-        this.loadEventDetails(bookings);
+        console.log("Received bookings:", this.bookings);
+        // Since API bookings already include event data, populate events cache directly
+        this.populateEventsFromBookings(bookings);
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading bookings:', error);
@@ -45,23 +61,48 @@ export class UserDashboardComponent implements OnInit {
     });
   }
 
+  populateEventsFromBookings(bookings: Booking[]): void {
+    console.log('Populating events from bookings:', bookings);
+    bookings.forEach(booking => {
+      if (booking.event) {
+        console.log('Adding event to cache:', booking.event.id, booking.event.title);
+        this.events[booking.eventId] = booking.event;
+      }
+    });
+    console.log('Final events cache:', this.events);
+  }
+
   loadEventDetails(bookings: Booking[]): void {
-    const eventIds = [...new Set(bookings.map(booking => booking.eventId))];
+    console.log('Loading event details for bookings:', bookings);
+
+    const eventIds = [...new Set(bookings
+      .map(booking => booking.eventId)
+      .filter(id => id !== null && id !== undefined && !isNaN(Number(id)))
+    )];
+
+    console.log('Event IDs to load:', eventIds);
 
     if (eventIds.length === 0) {
+      console.log('No valid event IDs found');
       this.isLoading = false;
       return;
     }
 
-    const eventRequests = eventIds.map(id => this.eventService.getEventById(id));
+    const eventRequests = eventIds.map(id => {
+      console.log('Creating request for event ID:', id);
+      return this.eventService.getEventById(id);
+    });
 
     forkJoin(eventRequests).subscribe({
       next: (events) => {
+        console.log('Received events:', events);
         events.forEach(event => {
           if (event) {
+            console.log('Adding event to cache:', event.id, event.title);
             this.events[event.id] = event;
           }
         });
+        console.log('Final events cache:', this.events);
         this.isLoading = false;
       },
       error: (error) => {
@@ -135,6 +176,9 @@ export class UserDashboardComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
+    if (isNaN(price) || price === null || price === undefined) {
+      return '$0.00';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
@@ -166,7 +210,10 @@ export class UserDashboardComponent implements OnInit {
   getTotalSpent(): number {
     return this.bookings
       .filter(booking => booking.status === BookingStatus.CONFIRMED)
-      .reduce((total, booking) => total + booking.totalAmount, 0);
+      .reduce((total, booking) => {
+        const amount = booking.totalAmount || 0;
+        return total + (isNaN(amount) ? 0 : amount);
+      }, 0);
   }
 
   getUpcomingEventsCount(): number {
@@ -187,5 +234,19 @@ export class UserDashboardComponent implements OnInit {
         return event && this.isEventPast(event.date);
       })
       .length;
+  }
+
+  getEventForBooking(booking: Booking): Event | null {
+    return this.events[booking.eventId] || null;
+  }
+
+  getEventTitle(booking: Booking): string {
+    const event = this.getEventForBooking(booking);
+    return event ? event.title : 'Event Details Loading...';
+  }
+
+  getEventPrice(booking: Booking): number {
+    const event = this.getEventForBooking(booking);
+    return event ? event.price : 0;
   }
 }

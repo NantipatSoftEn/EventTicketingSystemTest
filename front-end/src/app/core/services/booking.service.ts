@@ -142,11 +142,75 @@ export class BookingService {
         return of([]);
       }
       return this.apiService.getUserBookings(userId.toString()).pipe(
+        map(apiBookings => this.transformApiBookingsToFrontendFormat(apiBookings)),
         catchError(error => {
           console.error('Error fetching user bookings from API:', error);
           return this.getMockUserBookings(userId); // Fallback to mock data
         })
       );
+    }
+  }
+
+  private transformApiBookingsToFrontendFormat(apiBookings: any[]): Booking[] {
+    return apiBookings.map(apiBooking => ({
+      id: apiBooking.id.toString(),
+      userId: apiBooking.user_id,
+      eventId: apiBooking.event_id,
+      quantity: apiBooking.quantity,
+      totalAmount: parseFloat(apiBooking.total_amount),
+      status: this.mapApiStatusToFrontendStatus(apiBooking.status),
+      bookingDate: new Date(apiBooking.booking_date),
+      tickets: apiBooking.tickets?.map((ticket: any) => ({
+        id: ticket.id.toString(),
+        bookingId: ticket.booking_id.toString(),
+        ticketCode: ticket.ticket_code,
+        status: this.mapApiTicketStatusToFrontendStatus(ticket.status),
+        createdAt: new Date() // API doesn't provide created_at for tickets
+      })) || [],
+      // Store event data if provided by API
+      event: apiBooking.event ? {
+        id: apiBooking.event.id,
+        title: apiBooking.event.title,
+        description: apiBooking.event.description,
+        venue: apiBooking.event.venue,
+        date: new Date(apiBooking.event.date_time),
+        time: new Date(apiBooking.event.date_time).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        price: parseFloat(apiBooking.event.price),
+        totalTickets: apiBooking.event.capacity,
+        availableTickets: apiBooking.event.capacity, // API doesn't provide available tickets
+        image: '/assets/images/default-event.jpg', // Default image
+        isActive: apiBooking.event.status === 'active',
+        createdAt: new Date(apiBooking.event.created_at)
+      } : undefined
+    }));
+  }
+
+  private mapApiStatusToFrontendStatus(apiStatus: string): BookingStatus {
+    switch (apiStatus.toLowerCase()) {
+      case 'confirmed':
+        return BookingStatus.CONFIRMED;
+      case 'cancelled':
+        return BookingStatus.CANCELLED;
+      case 'pending':
+        return BookingStatus.PENDING;
+      default:
+        return BookingStatus.PENDING;
+    }
+  }
+
+  private mapApiTicketStatusToFrontendStatus(apiStatus: string): TicketStatus {
+    switch (apiStatus.toLowerCase()) {
+      case 'active':
+        return TicketStatus.VALID;
+      case 'used':
+        return TicketStatus.USED;
+      case 'cancelled':
+        return TicketStatus.CANCELLED;
+      default:
+        return TicketStatus.VALID;
     }
   }
 

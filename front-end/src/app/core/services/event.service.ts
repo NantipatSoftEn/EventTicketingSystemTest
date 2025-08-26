@@ -201,19 +201,39 @@ export class EventService {
   }
 
   getEventById(id: string | number): Observable<Event | undefined> {
+    console.log('getEventById called with:', id);
+
+    // Handle invalid input
+    if (id === null || id === undefined || id === '') {
+      console.log('Invalid input, returning undefined');
+      return of(undefined);
+    }
+
     const eventId = typeof id === 'string' ? parseInt(id) : id;
-    
+
+    // Handle invalid conversion
+    if (isNaN(eventId)) {
+      console.log('Invalid eventId after conversion, returning undefined');
+      return of(undefined);
+    }
+
+    console.log('Dev mode:', this.devModeService.isDevMode);
+
     if (this.devModeService.isDevMode) {
+      console.log('Using mock data for event ID:', eventId);
       return this.getMockEventById(eventId);
     } else {
+      console.log('Using API for event ID:', eventId);
       // First check if we have the event in cache
       if (this.isCacheLoaded) {
         const event = this.cachedEvents.find(e => e.id === eventId);
         if (event) {
+          console.log('Found event in cache:', event);
           return of(event);
         }
       }
       // If not in cache or cache not loaded, fetch from API
+      console.log('Fetching from API:', eventId.toString());
       return this.getApiEventById(eventId.toString());
     }
   }
@@ -228,7 +248,7 @@ export class EventService {
 
   updateEvent(id: string | number, event: Partial<Event>): Observable<Event | null> {
     const eventId = typeof id === 'string' ? parseInt(id) : id;
-    
+
     if (this.devModeService.isDevMode) {
       return this.updateMockEvent(eventId, event);
     } else {
@@ -260,7 +280,7 @@ export class EventService {
   // Method to reduce available tickets (used during booking)
   reduceAvailableTickets(eventId: string | number, quantity: number): Observable<boolean> {
     const numericEventId = typeof eventId === 'string' ? parseInt(eventId) : eventId;
-    
+
     if (this.devModeService.isDevMode) {
       const event = this.mockEvents.find(e => e.id === numericEventId);
       if (event && event.availableTickets >= quantity) {

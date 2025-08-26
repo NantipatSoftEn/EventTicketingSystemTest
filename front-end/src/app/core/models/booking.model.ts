@@ -34,7 +34,7 @@ export interface BookingApiRequest {
 }
 
 export enum BookingStatus {
-  CONFIRMED = 'confirmed',
+  CONFIRMED = 'active', // hotfix
   CANCELLED = 'cancelled',
   PENDING = 'pending'
 }
