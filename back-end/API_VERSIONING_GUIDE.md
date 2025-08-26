@@ -29,19 +29,19 @@ GET /api/v1/bookings/user/1
 
 ## Endpoint Mapping
 
-| Old Endpoint | New Endpoint | Notes |
-|-------------|-------------|-------|
-| `GET /api/users` | `GET /api/v1/users` | List all users |
-| `POST /api/users` | `POST /api/v1/users` | Create user |
-| `GET /api/users/{id}` | `GET /api/v1/users/{id}` | Get user by ID |
-| `GET /api/events` | `GET /api/v1/events` | List all events |
-| `POST /api/events` | `POST /api/v1/events` | Create event |
-| `GET /api/events/{id}` | `GET /api/v1/events/{id}` | Get event by ID |
-| `PUT /api/events/{id}` | `PUT /api/v1/events/{id}` | Update event |
-| `POST /api/bookings` | `POST /api/v1/bookings` | Create booking |
-| `GET /api/bookings/user/{id}` | `GET /api/v1/bookings/user/{id}` | Get user bookings |
-| `GET /api/bookings/event/{id}` | `GET /api/v1/bookings/event/{id}` | Get event bookings |
-| `PUT /api/bookings/{id}/status` | `PUT /api/v1/bookings/{id}/status` | Update booking status |
+| New Endpoint | Notes |
+|-------------|-------|
+| `GET /api/v1/users` | List all users |
+| `POST /api/v1/users` | Create user |
+| `GET /api/v1/users/{id}` | Get user by ID |
+| `GET /api/v1/events` | List all events |
+| `POST /api/v1/events` | Create event |
+| `GET /api/v1/events/{id}` | Get event by ID |
+| `PUT /api/v1/events/{id}` | Update event |
+| `POST /api/v1/bookings` | Create booking |
+| `GET /api/v1/bookings/user/{id}` | Get user bookings |
+| `GET /api/v1/bookings/event/{id}` | Get event bookings |
+| `PUT /api/v1/bookings/{id}/status` | Update booking status |
 
 ## New Endpoints
 

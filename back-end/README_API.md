@@ -58,8 +58,11 @@ The API will be available at:
 
 ### Base URL
 ```
-http://localhost:8000
+http://localhost:8000/api/v1
 ```
+
+### API Versioning
+This API uses URL-based versioning. Current version is v1. All endpoints are prefixed with `/api/v1/`.
 
 ### Authentication Note
 This implementation includes admin role validation but doesn't include full authentication middleware. In production, implement proper JWT/OAuth authentication.
@@ -68,7 +71,7 @@ This implementation includes admin role validation but doesn't include full auth
 
 ### List All Events
 ```http
-GET /api/events
+GET /api/v1/events
 ```
 
 **Response:**
@@ -90,12 +93,12 @@ GET /api/events
 
 ### Get Event Details
 ```http
-GET /api/events/{id}
+GET /api/v1/events/{id}
 ```
 
 ### Create Event (Admin Only)
 ```http
-POST /api/events
+POST /api/v1/events
 ```
 
 **Request Body:**
@@ -113,14 +116,14 @@ POST /api/events
 
 ### Update Event
 ```http
-PUT /api/events/{id}
+PUT /api/v1/events/{id}
 ```
 
 ## 📅 Bookings API
 
 ### Create Booking
 ```http
-POST /api/bookings
+POST /api/v1/bookings
 ```
 
 **Request Body:**
@@ -147,7 +150,7 @@ POST /api/bookings
 
 ### Get User Bookings
 ```http
-GET /api/bookings/user/{user_id}
+GET /api/v1/bookings/user/{user_id}
 ```
 
 **Response includes:**
@@ -158,24 +161,24 @@ GET /api/bookings/user/{user_id}
 
 ### Get Event Bookings (Admin Only)
 ```http
-GET /api/bookings/event/{event_id}
+GET /api/v1/bookings/event/{event_id}
 ```
 
 ### Update Booking Status
 ```http
-PUT /api/bookings/{booking_id}?status=cancelled
+PUT /api/v1/bookings/{booking_id}/status
 ```
 
 ## 👥 Users API
 
 ### List All Users
 ```http
-GET /api/users
+GET /api/v1/users
 ```
 
 ### Create User
 ```http
-POST /api/users
+POST /api/v1/users
 ```
 
 **Request Body:**
@@ -274,7 +277,7 @@ The system includes comprehensive sample data:
 
 **Create a booking:**
 ```bash
-curl -X POST "http://localhost:8000/api/bookings" \
+curl -X POST "http://localhost:8000/api/v1/bookings" \
      -H "Content-Type: application/json" \
      -d '{
        "user_id": 1,
@@ -285,7 +288,7 @@ curl -X POST "http://localhost:8000/api/bookings" \
 
 **Get events:**
 ```bash
-curl -X GET "http://localhost:8000/api/events"
+curl -X GET "http://localhost:8000/api/v1/events"
 ```
 
 ### Using the Interactive Docs
@@ -354,7 +357,7 @@ python create_sample_data.py
 fastapi dev main.py
 
 # Start production server
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn src.main:app
 ```
 
 ---
