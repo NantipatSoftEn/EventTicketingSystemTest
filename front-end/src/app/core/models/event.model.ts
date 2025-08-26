@@ -9,7 +9,6 @@ export interface Event {
   totalTickets: number;
   availableTickets: number;
   image: string;
-  category: string;
   isActive: boolean;
   createdAt: Date;
 }
@@ -19,5 +18,4 @@ export interface EventFilters {
   venue?: string;
   dateFrom?: Date;
   dateTo?: Date;
-  category?: string;
 }

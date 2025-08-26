@@ -38,7 +38,6 @@ export class ApiService {
 
     if (filters) {
       if (filters.search) params = params.set('search', filters.search);
-      if (filters.category) params = params.set('category', filters.category);
       if (filters.venue) params = params.set('venue', filters.venue);
       if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom.toISOString());
       if (filters.dateTo) params = params.set('dateTo', filters.dateTo.toISOString());
@@ -94,7 +93,6 @@ export class ApiService {
       totalTickets: apiEvent.capacity,
       availableTickets: apiEvent.capacity, // Backend doesn't track available tickets separately
       image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop', // Default image
-      category: 'General', // Default category if not provided
       isActive: apiEvent.status === 'active',
       createdAt: new Date(apiEvent.created_at)
     };

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, map, catchError } from 'rxjs';
+import { Observable, of, delay, map, catchError, BehaviorSubject } from 'rxjs';
 import { Event, EventFilters } from '../models/event.model';
 import { ApiService } from './api.service';
 import { DevModeService } from './dev-mode.service';
@@ -8,6 +8,9 @@ import { DevModeService } from './dev-mode.service';
   providedIn: 'root'
 })
 export class EventService {
+  private cachedEvents: Event[] = [];
+  private eventsCache$ = new BehaviorSubject<Event[]>([]);
+  private isCacheLoaded = false;
   private mockEvents: Event[] = [
     {
       id: '1',
@@ -20,7 +23,6 @@ export class EventService {
       totalTickets: 5000,
       availableTickets: 3250,
       image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop',
-      category: 'Music',
       isActive: true,
       createdAt: new Date('2025-01-15')
     },
@@ -35,7 +37,6 @@ export class EventService {
       totalTickets: 1000,
       availableTickets: 450,
       image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop',
-      category: 'Technology',
       isActive: true,
       createdAt: new Date('2025-02-01')
     },
@@ -50,7 +51,6 @@ export class EventService {
       totalTickets: 2000,
       availableTickets: 1200,
       image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
-      category: 'Food & Drink',
       isActive: true,
       createdAt: new Date('2025-02-10')
     },
@@ -65,7 +65,6 @@ export class EventService {
       totalTickets: 800,
       availableTickets: 600,
       image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=600&fit=crop',
-      category: 'Art',
       isActive: true,
       createdAt: new Date('2025-02-20')
     },
@@ -80,7 +79,6 @@ export class EventService {
       totalTickets: 300,
       availableTickets: 85,
       image: 'https://images.unsplash.com/photo-1585699933707-4b823080deb9?w=800&h=600&fit=crop',
-      category: 'Comedy',
       isActive: true,
       createdAt: new Date('2025-03-01')
     },
@@ -95,7 +93,6 @@ export class EventService {
       totalTickets: 1500,
       availableTickets: 1100,
       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop',
-      category: 'Sports & Fitness',
       isActive: true,
       createdAt: new Date('2025-03-10')
     }
@@ -110,15 +107,111 @@ export class EventService {
     if (this.devModeService.isDevMode) {
       return this.getMockEvents(filters);
     } else {
-      console.log("real API")
-      return this.getApiEvents(filters);
+      // If cache is not loaded, fetch from API first
+      if (!this.isCacheLoaded) {
+        return this.loadEventsFromApi().pipe(
+          map(events => this.applyFilters(events, filters))
+        );
+      } else {
+        // Use cached data and apply filters locally
+        return of(this.applyFilters(this.cachedEvents, filters));
+      }
     }
+  }
+
+  // Method to refresh events from API (can be called manually when needed)
+  refreshEvents(): Observable<Event[]> {
+    this.isCacheLoaded = false;
+    this.cachedEvents = [];
+    return this.loadEventsFromApi();
+  }
+
+  // Method to load events from API and cache them
+  private loadEventsFromApi(): Observable<Event[]> {
+    return this.apiService.getEvents().pipe(
+      map(events => {
+        this.cachedEvents = events.filter(event => event.isActive);
+        this.eventsCache$.next(this.cachedEvents);
+        this.isCacheLoaded = true;
+        return this.cachedEvents;
+      }),
+      catchError(error => {
+        console.error('Error fetching events from API:', error);
+        // Fallback to mock data if API fails
+        return this.getMockEvents();
+      })
+    );
+  }
+
+  // Method to apply filters to events array
+  private applyFilters(events: Event[], filters?: EventFilters): Event[] {
+    if (!filters) {
+      return events;
+    }
+
+    let filteredEvents = [...events];
+    console.log('Starting with', filteredEvents.length, 'events');
+
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filteredEvents = filteredEvents.filter(event =>
+        event.title.toLowerCase().includes(searchTerm) ||
+        event.venue.toLowerCase().includes(searchTerm) ||
+        event.description.toLowerCase().includes(searchTerm)
+      );
+      console.log('After search filter:', filteredEvents.length, 'events');
+    }
+
+    if (filters.venue) {
+      filteredEvents = filteredEvents.filter(event =>
+        event.venue.toLowerCase().includes(filters.venue!.toLowerCase())
+      );
+      console.log('After venue filter:', filteredEvents.length, 'events');
+    }
+
+    if (filters.dateFrom) {
+      const fromDate = new Date(filters.dateFrom);
+      fromDate.setHours(0, 0, 0, 0); // Set to start of day
+      console.log('Filtering events from date:', fromDate);
+      filteredEvents = filteredEvents.filter(event => {
+        const eventDate = new Date(event.date);
+        eventDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        const isAfterFrom = eventDate >= fromDate;
+        console.log('Event:', event.title, 'Date:', eventDate, 'Is after from:', isAfterFrom);
+        return isAfterFrom;
+      });
+      console.log('After dateFrom filter:', filteredEvents.length, 'events');
+    }
+
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo);
+      toDate.setHours(23, 59, 59, 999); // Set to end of day
+      console.log('Filtering events to date:', toDate);
+      filteredEvents = filteredEvents.filter(event => {
+        const eventDate = new Date(event.date);
+        eventDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        const isBeforeTo = eventDate <= toDate;
+        console.log('Event:', event.title, 'Date:', eventDate, 'Is before to:', isBeforeTo);
+        return isBeforeTo;
+      });
+      console.log('After dateTo filter:', filteredEvents.length, 'events');
+    }
+
+    return filteredEvents;
   }
 
   getEventById(id: string): Observable<Event | undefined> {
     if (this.devModeService.isDevMode) {
       return this.getMockEventById(id);
     } else {
+      // First check if we have the event in cache
+      if (this.isCacheLoaded) {
+        const event = this.cachedEvents.find(e => e.id === id);
+        if (event) {
+          return of(event);
+        }
+      }
+      // If not in cache or cache not loaded, fetch from API
       return this.getApiEventById(id);
     }
   }
@@ -141,29 +234,22 @@ export class EventService {
     }
   }
 
-  getCategories(): Observable<string[]> {
-    if (this.devModeService.isDevMode) {
-      const categories = [...new Set(this.mockEvents.map(event => event.category))];
-      return of(categories);
-    } else {
-      // For API mode, we'll extract categories from the fetched events
-      return this.getApiEvents().pipe(
-        map(events => [...new Set(events.map(event => event.category))]),
-        catchError(() => of([]))
-      );
-    }
-  }
-
   getVenues(): Observable<string[]> {
     if (this.devModeService.isDevMode) {
       const venues = [...new Set(this.mockEvents.map(event => event.venue))];
       return of(venues);
     } else {
-      // For API mode, we'll extract venues from the fetched events
-      return this.getApiEvents().pipe(
-        map(events => [...new Set(events.map(event => event.venue))]),
-        catchError(() => of([]))
-      );
+      // Use cached events if available
+      if (this.isCacheLoaded) {
+        const venues = [...new Set(this.cachedEvents.map(event => event.venue))];
+        return of(venues);
+      } else {
+        // Load events first and then extract venues
+        return this.loadEventsFromApi().pipe(
+          map(events => [...new Set(events.map(event => event.venue))]),
+          catchError(() => of([]))
+        );
+      }
     }
   }
 
@@ -177,51 +263,26 @@ export class EventService {
       }
       return of(false);
     } else {
+      // Update cache if event exists
+      const cachedEvent = this.cachedEvents.find(e => e.id === eventId);
+      if (cachedEvent && cachedEvent.availableTickets >= quantity) {
+        cachedEvent.availableTickets -= quantity;
+        this.eventsCache$.next(this.cachedEvents);
+      }
       // For API mode, this would typically involve a specific endpoint
-      // For now, we'll simulate success
       return of(true).pipe(delay(300));
     }
   }
 
+  // Get cached events observable for real-time updates
+  getCachedEvents(): Observable<Event[]> {
+    return this.eventsCache$.asObservable();
+  }
+
   // Private methods for mock data
   private getMockEvents(filters?: EventFilters): Observable<Event[]> {
-    let filteredEvents = this.mockEvents.filter(event => event.isActive);
-
-    if (filters) {
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredEvents = filteredEvents.filter(event =>
-          event.title.toLowerCase().includes(searchTerm) ||
-          event.venue.toLowerCase().includes(searchTerm) ||
-          event.description.toLowerCase().includes(searchTerm)
-        );
-      }
-
-      if (filters.venue) {
-        filteredEvents = filteredEvents.filter(event =>
-          event.venue.toLowerCase().includes(filters.venue!.toLowerCase())
-        );
-      }
-
-      if (filters.category) {
-        filteredEvents = filteredEvents.filter(event =>
-          event.category === filters.category
-        );
-      }
-
-      if (filters.dateFrom) {
-        filteredEvents = filteredEvents.filter(event =>
-          event.date >= filters.dateFrom!
-        );
-      }
-
-      if (filters.dateTo) {
-        filteredEvents = filteredEvents.filter(event =>
-          event.date <= filters.dateTo!
-        );
-      }
-    }
-
+    const activeEvents = this.mockEvents.filter(event => event.isActive);
+    const filteredEvents = this.applyFilters(activeEvents, filters);
     return of(filteredEvents).pipe(delay(500)); // Simulate API delay
   }
 
@@ -249,16 +310,7 @@ export class EventService {
     return of(null);
   }
 
-  // Private methods for API data
-  private getApiEvents(filters?: EventFilters): Observable<Event[]> {
-    return this.apiService.getEvents(filters).pipe(
-      catchError(error => {
-        console.error('Error fetching events from API:', error);
-        // Fallback to mock data if API fails
-        return this.getMockEvents(filters);
-      })
-    );
-  }
+  // Private methods for API data (removed getApiEvents as it's replaced by loadEventsFromApi)
 
   private getApiEventById(id: string): Observable<Event | undefined> {
     return this.apiService.getEventById(id).pipe(

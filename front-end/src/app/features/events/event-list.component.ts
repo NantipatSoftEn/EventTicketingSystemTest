@@ -4,35 +4,33 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Event, EventFilters } from '../../core/models/event.model';
 import { EventService } from '../../core/services/event.service';
-import { DevModeToggleComponent } from '../../shared/components/dev-mode-toggle/dev-mode-toggle.component';
 
 @Component({
   selector: 'app-event-list',
-  imports: [CommonModule, FormsModule, RouterLink, DevModeToggleComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.css'
 })
 export class EventListComponent implements OnInit {
   events: Event[] = [];
   filteredEvents: Event[] = [];
-  categories: string[] = [];
-  venues: string[] = [];
   isLoading = false;
 
   filters: EventFilters = {
     search: '',
-    category: '',
     venue: '',
     dateFrom: undefined,
     dateTo: undefined
   };
 
+  // String versions for HTML date inputs
+  dateFromInput: string = '';
+  dateToInput: string = '';
+
   constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
     this.loadEvents();
-    this.loadCategories();
-    this.loadVenues();
   }
 
   loadEvents(): void {
@@ -51,28 +49,6 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  loadCategories(): void {
-    this.eventService.getCategories().subscribe({
-      next: (categories: string[]) => {
-        this.categories = categories;
-      },
-      error: (error: any) => {
-        console.error('Error loading categories:', error);
-      }
-    });
-  }
-
-  loadVenues(): void {
-    this.eventService.getVenues().subscribe({
-      next: (venues: string[]) => {
-        this.venues = venues;
-      },
-      error: (error: any) => {
-        console.error('Error loading venues:', error);
-      }
-    });
-  }
-
   applyFilters(): void {
     this.isLoading = true;
     const activeFilters: EventFilters = {};
@@ -80,21 +56,25 @@ export class EventListComponent implements OnInit {
     if (this.filters.search?.trim()) {
       activeFilters.search = this.filters.search.trim();
     }
-    if (this.filters.category) {
-      activeFilters.category = this.filters.category;
+    if (this.filters.venue?.trim()) {
+      activeFilters.venue = this.filters.venue.trim();
     }
-    if (this.filters.venue) {
-      activeFilters.venue = this.filters.venue;
+    
+    // Convert string inputs to Date objects for filtering
+    if (this.dateFromInput) {
+      activeFilters.dateFrom = new Date(this.dateFromInput);
+      console.log('Date From Filter:', this.dateFromInput, '-> Date object:', activeFilters.dateFrom);
     }
-    if (this.filters.dateFrom) {
-      activeFilters.dateFrom = this.filters.dateFrom;
+    if (this.dateToInput) {
+      activeFilters.dateTo = new Date(this.dateToInput);
+      console.log('Date To Filter:', this.dateToInput, '-> Date object:', activeFilters.dateTo);
     }
-    if (this.filters.dateTo) {
-      activeFilters.dateTo = this.filters.dateTo;
-    }
+
+    console.log('Applying filters:', activeFilters);
 
     this.eventService.getEvents(activeFilters).subscribe({
       next: (events: Event[]) => {
+        console.log('Filtered events result:', events.length, 'events found');
         this.filteredEvents = events;
         this.isLoading = false;
       },
@@ -108,11 +88,12 @@ export class EventListComponent implements OnInit {
   clearFilters(): void {
     this.filters = {
       search: '',
-      category: '',
       venue: '',
       dateFrom: undefined,
       dateTo: undefined
     };
+    this.dateFromInput = '';
+    this.dateToInput = '';
     this.filteredEvents = this.events;
   }
 

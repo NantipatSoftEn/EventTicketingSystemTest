@@ -38,11 +38,6 @@
             [alt]="event.title"
             class="w-full h-64 lg:h-96 object-cover rounded-lg shadow-lg"
           />
-          <div class="absolute top-4 left-4">
-            <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              {{ event.category }}
-            </span>
-          </div>
           <div class="absolute top-4 right-4">
             <span [class]="getAvailabilityStatus().class + ' px-3 py-1 rounded-full text-sm font-medium'">
               {{ getAvailabilityStatus().text }}

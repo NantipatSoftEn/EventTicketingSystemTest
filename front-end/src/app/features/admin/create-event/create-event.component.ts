@@ -24,22 +24,10 @@ export class CreateEventComponent {
     time: '',
     price: 0,
     totalTickets: 0,
-    image: '',
-    category: ''
+    image: ''
   };
 
-  categories = [
-    'Music',
-    'Technology',
-    'Food & Drink',
-    'Art',
-    'Comedy',
-    'Sports & Fitness',
-    'Business',
-    'Education',
-    'Entertainment',
-    'Other'
-  ];
+  categories = [];
 
   constructor(
     private eventService: EventService,
@@ -67,12 +55,11 @@ export class CreateEventComponent {
       totalTickets: this.eventForm.totalTickets,
       availableTickets: this.eventForm.totalTickets,
       image: this.eventForm.image || this.getDefaultImage(),
-      category: this.eventForm.category,
       isActive: true
     };
 
     this.eventService.createEvent(eventData).subscribe({
-      next: (createdEvent) => {
+      next: (createdEvent: Event) => {
         this.isLoading = false;
         this.successMessage = 'Event created successfully!';
 
@@ -84,7 +71,7 @@ export class CreateEventComponent {
           this.router.navigate(['/admin/manage-events']);
         }, 2000);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error creating event:', error);
         this.errorMessage = 'Failed to create event. Please try again.';
         this.isLoading = false;
@@ -100,8 +87,7 @@ export class CreateEventComponent {
       this.eventForm.date &&
       this.eventForm.time &&
       this.eventForm.price > 0 &&
-      this.eventForm.totalTickets > 0 &&
-      this.eventForm.category
+      this.eventForm.totalTickets > 0
     );
   }
 
@@ -114,8 +100,7 @@ export class CreateEventComponent {
       time: '',
       price: 0,
       totalTickets: 0,
-      image: '',
-      category: ''
+      image: ''
     };
   }
 
