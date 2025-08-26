@@ -208,6 +208,82 @@ class BookingUseCases:
         
         return result
     
+    async def get_booking_by_id(self, booking_id: int) -> BookingWithDetailsDTO:
+        """Get booking by ID with full details"""
+        booking = await self._booking_repository.get_by_id(booking_id)
+        if not booking:
+            raise ValueError("Booking not found")
+        
+        # Get related data
+        booking_user = await self._user_repository.get_by_id(booking.user_id)
+        booking_event = await self._event_repository.get_by_id(booking.event_id)
+        booking_tickets = await self._ticket_repository.get_by_booking_id(booking.id)
+        
+        # Create DTOs
+        user_dto = UserResponseDTO(
+            id=booking_user.id,
+            name=booking_user.name,
+            phone=booking_user.phone,
+            role=booking_user.role
+        )
+        
+        event_dto = EventResponseDTO(
+            id=booking_event.id,
+            title=booking_event.title,
+            description=booking_event.description,
+            venue=booking_event.venue,
+            date_time=booking_event.date_time,
+            capacity=booking_event.capacity,
+            price=booking_event.price,
+            status=booking_event.status,
+            created_at=booking_event.created_at
+        )
+        
+        ticket_dtos = [
+            TicketResponseDTO(
+                id=ticket.id,
+                booking_id=ticket.booking_id,
+                ticket_code=ticket.ticket_code,
+                status=ticket.status
+            )
+            for ticket in booking_tickets
+        ]
+        
+        return BookingWithDetailsDTO(
+            id=booking.id,
+            user_id=booking.user_id,
+            event_id=booking.event_id,
+            quantity=booking.quantity,
+            total_amount=booking.total_amount,
+            booking_date=booking.booking_date,
+            status=booking.status,
+            user=user_dto,
+            event=event_dto,
+            tickets=ticket_dtos
+        )
+
+    async def get_booking_stats(self, event_id: int) -> dict:
+        """Get booking statistics for a specific event"""
+        # Validate event exists
+        event = await self._event_repository.get_by_id(event_id)
+        if not event:
+            raise ValueError("Event not found")
+        
+        # Get confirmed bookings for the event
+        bookings = await self._booking_repository.get_by_event_id(event_id)
+        confirmed_bookings = [b for b in bookings if b.status == BookingStatus.CONFIRMED]
+        
+        # Calculate statistics
+        total_bookings = len(confirmed_bookings)
+        total_revenue = sum(booking.total_amount for booking in confirmed_bookings)
+        total_tickets = sum(booking.quantity for booking in confirmed_bookings)
+        
+        return {
+            "totalBookings": total_bookings,
+            "totalRevenue": float(total_revenue),
+            "totalTickets": total_tickets
+        }
+    
     async def update_booking_status(self, booking_id: int, status: BookingStatus) -> BookingResponseDTO:
         """Update booking status"""
         booking = await self._booking_repository.get_by_id(booking_id)

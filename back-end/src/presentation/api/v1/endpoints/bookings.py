@@ -35,6 +35,16 @@ async def get_user_bookings(user_id: int):
     )
 
 
+@router.get("/{booking_id}", response_model=BookingApiResponse)
+async def get_booking_by_id(booking_id: int):
+    """Get booking by ID with full details"""
+    booking = await container.booking_controller.get_booking_by_id(booking_id)
+    return ApiResponse.success_response(
+        data=prepare_response_data(booking),
+        message="Booking retrieved successfully"
+    )
+
+
 @router.get("/event/{event_id}", response_model=BookingListApiResponse)
 async def get_event_bookings(event_id: int, admin_user_id: int = 1):
     """Get bookings for a specific event with full details (admin only)"""
@@ -42,6 +52,16 @@ async def get_event_bookings(event_id: int, admin_user_id: int = 1):
     return ApiListResponse.success_response(
         data=prepare_response_data(bookings),
         message="Event bookings retrieved successfully"
+    )
+
+
+@router.get("/event/{event_id}/stats", response_model=dict)
+async def get_booking_stats(event_id: int):
+    """Get booking statistics for a specific event"""
+    stats = await container.booking_controller.get_booking_stats(event_id)
+    return ApiResponse.success_response(
+        data=stats,
+        message="Booking statistics retrieved successfully"
     )
 
 

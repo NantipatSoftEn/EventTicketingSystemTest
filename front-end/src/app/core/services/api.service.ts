@@ -161,4 +161,16 @@ export class ApiService {
       this.http.put<ApiResponse<any>>(`${this.baseUrl}/bookings/${bookingId}/status`, { status })
     );
   }
+
+  getBookingById(bookingId: string): Observable<any> {
+    return this.handleResponse(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/bookings/${bookingId}`)
+    );
+  }
+
+  getBookingStats(eventId: string): Observable<any> {
+    return this.handleResponse(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/bookings/event/${eventId}/stats`)
+    );
+  }
 }

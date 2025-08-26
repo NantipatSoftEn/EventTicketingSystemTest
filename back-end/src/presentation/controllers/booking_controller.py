@@ -149,6 +149,63 @@ class BookingController:
                 detail=str(e)
             )
     
+    async def get_booking_by_id(self, booking_id: int) -> BookingWithDetailsSchema:
+        """Get booking by ID with full details"""
+        try:
+            booking = await self._booking_use_cases.get_booking_by_id(booking_id)
+            
+            return BookingWithDetailsSchema(
+                id=booking.id,
+                user_id=booking.user_id,
+                event_id=booking.event_id,
+                quantity=booking.quantity,
+                total_amount=booking.total_amount,
+                booking_date=booking.booking_date,
+                status=booking.status,
+                user=UserResponseSchema(
+                    id=booking.user.id,
+                    name=booking.user.name,
+                    phone=booking.user.phone,
+                    role=booking.user.role
+                ),
+                event=EventResponseSchema(
+                    id=booking.event.id,
+                    title=booking.event.title,
+                    description=booking.event.description,
+                    venue=booking.event.venue,
+                    date_time=booking.event.date_time,
+                    capacity=booking.event.capacity,
+                    price=booking.event.price,
+                    status=booking.event.status,
+                    created_at=booking.event.created_at
+                ),
+                tickets=[
+                    TicketResponseSchema(
+                        id=ticket.id,
+                        booking_id=ticket.booking_id,
+                        ticket_code=ticket.ticket_code,
+                        status=ticket.status
+                    )
+                    for ticket in booking.tickets
+                ]
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+
+    async def get_booking_stats(self, event_id: int) -> dict:
+        """Get booking statistics for a specific event"""
+        try:
+            stats = await self._booking_use_cases.get_booking_stats(event_id)
+            return stats
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+    
     async def update_booking_status(self, booking_id: int, status: BookingStatus) -> BookingResponseSchema:
         """Update booking status"""
         try:
