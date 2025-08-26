@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay, map, throwError, catchError } from 'rxjs';
-import { Booking, BookingRequest, BookingStatus, Ticket, TicketStatus } from '../models/booking.model';
+import { Booking, BookingRequest, BookingApiRequest, BookingStatus, Ticket, TicketStatus } from '../models/booking.model';
 import { ApiService } from './api.service';
 import { DevModeService } from './dev-mode.service';
 
@@ -11,8 +11,8 @@ export class BookingService {
   private mockBookings: Booking[] = [
     {
       id: '1',
-      userId: 'user1',
-      eventId: '1',
+      userId: 1,
+      eventId: 1,
       quantity: 2,
       totalAmount: 150.00,
       status: BookingStatus.CONFIRMED,
@@ -36,8 +36,8 @@ export class BookingService {
     },
     {
       id: '2',
-      userId: 'user1',
-      eventId: '2',
+      userId: 1,
+      eventId: 2,
       quantity: 1,
       totalAmount: 150.00,
       status: BookingStatus.CONFIRMED,
@@ -54,8 +54,8 @@ export class BookingService {
     },
     {
       id: '3',
-      userId: 'user2',
-      eventId: '3',
+      userId: 2,
+      eventId: 3,
       quantity: 4,
       totalAmount: 380.00,
       status: BookingStatus.CONFIRMED,
@@ -111,7 +111,29 @@ export class BookingService {
     }
   }
 
-  getUserBookings(userId?: string): Observable<Booking[]> {
+  createBookingWithApiFormat(bookingRequest: BookingApiRequest): Observable<Booking> {
+    if (this.devModeService.isDevMode) {
+      // Convert API format to internal format for mock
+      const internalRequest: BookingRequest = {
+        eventId: bookingRequest.event_id,
+        userId: bookingRequest.user_id,
+        quantity: bookingRequest.quantity,
+        userName: 'Test User', // Default for API format
+        userPhone: ''
+      };
+      return this.createMockBooking(internalRequest);
+    } else {
+      // Send the API format directly to the backend (don't transform to internal format)
+      return this.apiService.createBooking(bookingRequest).pipe(
+        catchError(error => {
+          console.error('Error creating booking via API:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+  }
+
+  getUserBookings(userId?: number): Observable<Booking[]> {
     if (this.devModeService.isDevMode) {
       return this.getMockUserBookings(userId);
     } else {
@@ -119,7 +141,7 @@ export class BookingService {
         // For demo purposes, return empty array if no userId provided in API mode
         return of([]);
       }
-      return this.apiService.getUserBookings(userId).pipe(
+      return this.apiService.getUserBookings(userId.toString()).pipe(
         catchError(error => {
           console.error('Error fetching user bookings from API:', error);
           return this.getMockUserBookings(userId); // Fallback to mock data
@@ -156,11 +178,11 @@ export class BookingService {
     }
   }
 
-  getEventBookings(eventId: string): Observable<Booking[]> {
+  getEventBookings(eventId: number): Observable<Booking[]> {
     if (this.devModeService.isDevMode) {
       return this.getMockEventBookings(eventId);
     } else {
-      return this.apiService.getEventBookings(eventId).pipe(
+      return this.apiService.getEventBookings(eventId.toString()).pipe(
         catchError(error => {
           console.error('Error fetching event bookings from API:', error);
           return this.getMockEventBookings(eventId); // Fallback to mock data
@@ -169,11 +191,11 @@ export class BookingService {
     }
   }
 
-  getBookingStats(eventId: string): Observable<{totalBookings: number, totalRevenue: number, totalTickets: number}> {
+  getBookingStats(eventId: number): Observable<{totalBookings: number, totalRevenue: number, totalTickets: number}> {
     if (this.devModeService.isDevMode) {
       return this.getMockBookingStats(eventId);
     } else {
-      return this.apiService.getBookingStats(eventId).pipe(
+      return this.apiService.getBookingStats(eventId.toString()).pipe(
         catchError(error => {
           console.error('Error fetching booking stats from API:', error);
           return this.getMockBookingStats(eventId); // Fallback to mock data
@@ -184,10 +206,10 @@ export class BookingService {
 
   // Private methods for mock data
   private createMockBooking(bookingRequest: BookingRequest): Observable<Booking> {
-    // Simulate booking creation
+    // Create booking with the provided user data
     const newBooking: Booking = {
       id: (this.mockBookings.length + 1).toString(),
-      userId: 'current-user', // In real app, get from auth service
+      userId: bookingRequest.userId, // Use the actual user ID from request
       eventId: bookingRequest.eventId,
       quantity: bookingRequest.quantity,
       totalAmount: 0, // Will be calculated based on event price
@@ -200,7 +222,7 @@ export class BookingService {
     return of(newBooking).pipe(delay(1000)); // Simulate API delay
   }
 
-  private getMockUserBookings(userId?: string): Observable<Booking[]> {
+  private getMockUserBookings(userId?: number): Observable<Booking[]> {
     // For demo purposes, return all bookings if no userId provided
     const userBookings = userId
       ? this.mockBookings.filter(booking => booking.userId === userId)
@@ -224,12 +246,12 @@ export class BookingService {
     return throwError(() => new Error('Booking not found or already cancelled'));
   }
 
-  private getMockEventBookings(eventId: string): Observable<Booking[]> {
+  private getMockEventBookings(eventId: number): Observable<Booking[]> {
     const eventBookings = this.mockBookings.filter(booking => booking.eventId === eventId);
     return of(eventBookings).pipe(delay(500));
   }
 
-  private getMockBookingStats(eventId: string): Observable<{totalBookings: number, totalRevenue: number, totalTickets: number}> {
+  private getMockBookingStats(eventId: number): Observable<{totalBookings: number, totalRevenue: number, totalTickets: number}> {
     const eventBookings = this.mockBookings.filter(booking =>
       booking.eventId === eventId && booking.status === BookingStatus.CONFIRMED
     );

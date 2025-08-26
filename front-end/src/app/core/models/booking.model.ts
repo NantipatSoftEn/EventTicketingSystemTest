@@ -1,7 +1,7 @@
 export interface Booking {
   id: string;
-  userId: string;
-  eventId: string;
+  userId: number;
+  eventId: number;
   quantity: number;
   totalAmount: number;
   status: BookingStatus;
@@ -20,11 +20,17 @@ export interface Ticket {
 }
 
 export interface BookingRequest {
-  eventId: string;
+  eventId: number;
+  userId: number;
   quantity: number;
-  userEmail: string;
   userName: string;
   userPhone?: string;
+}
+
+export interface BookingApiRequest {
+  user_id: number;
+  event_id: number;
+  quantity: number;
 }
 
 export enum BookingStatus {

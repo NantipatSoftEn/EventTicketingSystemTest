@@ -33,7 +33,7 @@ export class UserDashboardComponent implements OnInit {
     this.isLoading = true;
     const currentUser = this.authService.getCurrentUser();
 
-    this.bookingService.getUserBookings(currentUser?.id).subscribe({
+    this.bookingService.getUserBookings(currentUser?.id ? Number(currentUser.id) : undefined).subscribe({
       next: (bookings) => {
         this.bookings = bookings;
         this.loadEventDetails(bookings);

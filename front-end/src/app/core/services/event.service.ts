@@ -13,7 +13,7 @@ export class EventService {
   private isCacheLoaded = false;
   private mockEvents: Event[] = [
     {
-      id: '1',
+      id: 1,
       title: 'Summer Music Festival 2025',
       description: 'Join us for an unforgettable night of music featuring top artists from around the world. Experience live performances, food trucks, and an amazing atmosphere under the stars.',
       venue: 'Central Park Arena',
@@ -27,7 +27,7 @@ export class EventService {
       createdAt: new Date('2025-01-15')
     },
     {
-      id: '2',
+      id: 2,
       title: 'Tech Innovation Conference',
       description: 'Discover the latest trends in technology, AI, and innovation. Network with industry leaders and learn about cutting-edge developments shaping our future.',
       venue: 'Convention Center Downtown',
@@ -41,7 +41,7 @@ export class EventService {
       createdAt: new Date('2025-02-01')
     },
     {
-      id: '3',
+      id: 3,
       title: 'Food & Wine Festival',
       description: 'Indulge in culinary delights from renowned chefs and sample premium wines from around the globe. A perfect weekend experience for food enthusiasts.',
       venue: 'Riverside Park',
@@ -55,7 +55,7 @@ export class EventService {
       createdAt: new Date('2025-02-10')
     },
     {
-      id: '4',
+      id: 4,
       title: 'Art Exhibition: Modern Masters',
       description: 'Explore contemporary art from emerging and established artists. Interactive installations, guided tours, and exclusive artist meet-and-greets.',
       venue: 'Metropolitan Art Gallery',
@@ -69,7 +69,7 @@ export class EventService {
       createdAt: new Date('2025-02-20')
     },
     {
-      id: '5',
+      id: 5,
       title: 'Comedy Night Spectacular',
       description: 'Laugh until your sides hurt with our lineup of hilarious comedians. An evening of stand-up comedy, sketches, and interactive entertainment.',
       venue: 'Comedy Club Central',
@@ -83,7 +83,7 @@ export class EventService {
       createdAt: new Date('2025-03-01')
     },
     {
-      id: '6',
+      id: 6,
       title: 'Fitness & Wellness Expo',
       description: 'Discover the latest in fitness equipment, wellness programs, and healthy living. Free workout sessions, nutrition consultations, and product demos.',
       venue: 'Sports Complex Arena',
@@ -200,19 +200,21 @@ export class EventService {
     return filteredEvents;
   }
 
-  getEventById(id: string): Observable<Event | undefined> {
+  getEventById(id: string | number): Observable<Event | undefined> {
+    const eventId = typeof id === 'string' ? parseInt(id) : id;
+    
     if (this.devModeService.isDevMode) {
-      return this.getMockEventById(id);
+      return this.getMockEventById(eventId);
     } else {
       // First check if we have the event in cache
       if (this.isCacheLoaded) {
-        const event = this.cachedEvents.find(e => e.id === id);
+        const event = this.cachedEvents.find(e => e.id === eventId);
         if (event) {
           return of(event);
         }
       }
       // If not in cache or cache not loaded, fetch from API
-      return this.getApiEventById(id);
+      return this.getApiEventById(eventId.toString());
     }
   }
 
@@ -224,11 +226,13 @@ export class EventService {
     }
   }
 
-  updateEvent(id: string, event: Partial<Event>): Observable<Event | null> {
+  updateEvent(id: string | number, event: Partial<Event>): Observable<Event | null> {
+    const eventId = typeof id === 'string' ? parseInt(id) : id;
+    
     if (this.devModeService.isDevMode) {
-      return this.updateMockEvent(id, event);
+      return this.updateMockEvent(eventId, event);
     } else {
-      return this.apiService.updateEvent(id, event).pipe(
+      return this.apiService.updateEvent(eventId.toString(), event).pipe(
         catchError(() => of(null))
       );
     }
@@ -254,9 +258,11 @@ export class EventService {
   }
 
   // Method to reduce available tickets (used during booking)
-  reduceAvailableTickets(eventId: string, quantity: number): Observable<boolean> {
+  reduceAvailableTickets(eventId: string | number, quantity: number): Observable<boolean> {
+    const numericEventId = typeof eventId === 'string' ? parseInt(eventId) : eventId;
+    
     if (this.devModeService.isDevMode) {
-      const event = this.mockEvents.find(e => e.id === eventId);
+      const event = this.mockEvents.find(e => e.id === numericEventId);
       if (event && event.availableTickets >= quantity) {
         event.availableTickets -= quantity;
         return of(true).pipe(delay(300));
@@ -264,7 +270,7 @@ export class EventService {
       return of(false);
     } else {
       // Update cache if event exists
-      const cachedEvent = this.cachedEvents.find(e => e.id === eventId);
+      const cachedEvent = this.cachedEvents.find(e => e.id === numericEventId);
       if (cachedEvent && cachedEvent.availableTickets >= quantity) {
         cachedEvent.availableTickets -= quantity;
         this.eventsCache$.next(this.cachedEvents);
@@ -286,7 +292,7 @@ export class EventService {
     return of(filteredEvents).pipe(delay(500)); // Simulate API delay
   }
 
-  private getMockEventById(id: string): Observable<Event | undefined> {
+  private getMockEventById(id: number): Observable<Event | undefined> {
     const event = this.mockEvents.find(e => e.id === id);
     return of(event).pipe(delay(300));
   }
@@ -294,14 +300,14 @@ export class EventService {
   private createMockEvent(event: Omit<Event, 'id' | 'createdAt'>): Observable<Event> {
     const newEvent: Event = {
       ...event,
-      id: (this.mockEvents.length + 1).toString(),
+      id: this.mockEvents.length + 1,
       createdAt: new Date()
     };
     this.mockEvents.push(newEvent);
     return of(newEvent).pipe(delay(500));
   }
 
-  private updateMockEvent(id: string, event: Partial<Event>): Observable<Event | null> {
+  private updateMockEvent(id: number, event: Partial<Event>): Observable<Event | null> {
     const index = this.mockEvents.findIndex(e => e.id === id);
     if (index !== -1) {
       this.mockEvents[index] = { ...this.mockEvents[index], ...event };
@@ -318,7 +324,7 @@ export class EventService {
       catchError(error => {
         console.error('Error fetching event from API:', error);
         // Fallback to mock data if API fails
-        return this.getMockEventById(id);
+        return this.getMockEventById(parseInt(id));
       })
     );
   }

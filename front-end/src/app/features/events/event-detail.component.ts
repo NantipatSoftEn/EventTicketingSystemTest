@@ -1,20 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Event } from '../../core/models/event.model';
-import { BookingRequest } from '../../core/models/booking.model';
+import { BookingRequest, BookingApiRequest } from '../../core/models/booking.model';
+import { User } from '../../core/models/user.model';
 import { EventService } from '../../core/services/event.service';
 import { BookingService } from '../../core/services/booking.service';
 import { AuthService } from '../../core/services/auth.service';
+import { UserSelectorComponent } from '../../shared/components/user-selector/user-selector.component';
+import { User as UserServiceUser } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-event-detail',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UserSelectorComponent],
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css'
 })
 export class EventDetailComponent implements OnInit {
+  @ViewChild(UserSelectorComponent) userSelector!: UserSelectorComponent;
   event: Event | null = null;
   isLoading = false;
   isBooking = false;
@@ -23,10 +27,11 @@ export class EventDetailComponent implements OnInit {
 
   bookingForm = {
     quantity: 1,
-    userEmail: '',
     userName: '',
     userPhone: ''
   };
+  currentUser: User | null = null;
+  selectedTestUser: UserServiceUser | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -42,12 +47,19 @@ export class EventDetailComponent implements OnInit {
       this.loadEvent(eventId);
     }
 
-    // Pre-fill form with current user data if available
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
-      this.bookingForm.userEmail = currentUser.email;
-      this.bookingForm.userName = currentUser.name;
-      this.bookingForm.userPhone = currentUser.phone || '';
+    // Initialize form with empty values - will be filled by user selector
+    this.bookingForm.userName = '';
+    this.bookingForm.userPhone = '';
+  }
+
+  onUserSelected(user: UserServiceUser | null): void {
+    this.selectedTestUser = user;
+    if (user) {
+      this.bookingForm.userName = user.name;
+      this.bookingForm.userPhone = user.phone || '';
+    } else {
+      this.bookingForm.userName = '';
+      this.bookingForm.userPhone = '';
     }
   }
 
@@ -89,22 +101,22 @@ export class EventDetailComponent implements OnInit {
   }
 
   onSubmitBooking(): void {
-    if (!this.event || !this.isFormValid()) {
+    if (!this.event || !this.isFormValid() || !this.selectedTestUser) {
       return;
     }
 
     this.isBooking = true;
     this.bookingError = null;
 
-    const bookingRequest: BookingRequest = {
-      eventId: this.event.id,
-      quantity: this.bookingForm.quantity,
-      userEmail: this.bookingForm.userEmail,
-      userName: this.bookingForm.userName,
-      userPhone: this.bookingForm.userPhone
+    const bookingRequest: BookingApiRequest = {
+      user_id: this.selectedTestUser.id,
+      event_id: this.event.id,
+      quantity: this.bookingForm.quantity
     };
 
-    this.bookingService.createBooking(bookingRequest).subscribe({
+    console.log('Booking Request Body:', JSON.stringify(bookingRequest, null, 2));
+
+    this.bookingService.createBookingWithApiFormat(bookingRequest).subscribe({
       next: (booking) => {
         // Update available tickets
         this.eventService.reduceAvailableTickets(this.event!.id, this.bookingForm.quantity).subscribe();
@@ -127,7 +139,7 @@ export class EventDetailComponent implements OnInit {
 
   isFormValid(): boolean {
     return !!(
-      this.bookingForm.userEmail.trim() &&
+      this.selectedTestUser &&
       this.bookingForm.userName.trim() &&
       this.bookingForm.quantity > 0 &&
       this.event &&
