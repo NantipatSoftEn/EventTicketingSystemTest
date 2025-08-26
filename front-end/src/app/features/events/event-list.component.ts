@@ -42,6 +42,7 @@ export class EventListComponent implements OnInit {
         this.events = events;
         this.filteredEvents = events;
         this.isLoading = false;
+        console.log('Events loaded:', events);
       },
       error: (error: any) => {
         console.error('Error loading events:', error);

@@ -110,6 +110,7 @@ export class EventService {
     if (this.devModeService.isDevMode) {
       return this.getMockEvents(filters);
     } else {
+      console.log("real API")
       return this.getApiEvents(filters);
     }
   }

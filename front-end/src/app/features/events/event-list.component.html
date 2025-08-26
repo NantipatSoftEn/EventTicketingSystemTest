@@ -103,12 +103,11 @@
     <div *ngFor="let event of filteredEvents" class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <!-- Event Image -->
       <div class="relative h-48 bg-gray-200">
-        <!-- <img
+        <img
           [src]="event.image"
           [alt]="event.title"
           class="w-full h-full object-cover"
-          onerror="this.src='https://via.placeholder.com/400x300?text=Event+Image'"
-        /> -->
+        />
         <div class="absolute top-4 left-4">
           <span class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
             {{ event.category }}
