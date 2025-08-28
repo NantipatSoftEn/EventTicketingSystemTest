@@ -36,7 +36,7 @@ class EventRepositoryImpl(EventRepository):
         event_model = await EventModel.get_or_none(id=event_id)
         if not event_model:
             return None
-        
+
         return Event(
             id=event_model.id,
             title=event_model.title,
@@ -46,7 +46,10 @@ class EventRepositoryImpl(EventRepository):
             capacity=event_model.capacity,
             price=event_model.price,
             status=event_model.status,
-            created_at=event_model.created_at
+            created_at=event_model.created_at,
+            total_tickets_sold=event_model.total_tickets_sold,
+            total_revenue=event_model.total_revenue,
+            total_bookings=event_model.total_bookings
         )
     
     async def get_all(self) -> List[Event]:
@@ -63,7 +66,10 @@ class EventRepositoryImpl(EventRepository):
                 capacity=event_model.capacity,
                 price=event_model.price,
                 status=event_model.status,
-                created_at=event_model.created_at
+                created_at=event_model.created_at,
+                total_tickets_sold=event_model.total_tickets_sold,
+                total_revenue=event_model.total_revenue,
+                total_bookings=event_model.total_bookings
             )
             for event_model in event_models
         ]

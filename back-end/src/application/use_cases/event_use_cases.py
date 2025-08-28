@@ -2,7 +2,7 @@ from typing import List
 from datetime import datetime
 from ...domain.entities.event import Event, EventStatus
 from ...domain.repositories.event_repository import EventRepository
-from ..dtos.event_dto import EventCreateDTO, EventResponseDTO
+from ..dtos.event_dto import EventCreateDTO, EventResponseDTO, EventManagementDTO
 
 
 class EventUseCases:
@@ -124,3 +124,28 @@ class EventUseCases:
         # Delete the event
         deleted = await self._event_repository.delete(event_id)
         return deleted
+
+    async def get_events_for_management(self) -> List[EventManagementDTO]:
+        """Get all events with complete statistics for management view"""
+        events = await self._event_repository.get_all()
+        
+        return [
+            EventManagementDTO(
+                id=event.id,
+                title=event.title,
+                description=event.description,
+                venue=event.venue,
+                date_time=event.date_time,
+                capacity=event.capacity,
+                price=event.price,
+                status=event.status,
+                created_at=event.created_at,
+                total_tickets_sold=event.total_tickets_sold or 0,
+                available_tickets=event.get_available_tickets(),
+                total_revenue=event.total_revenue or 0,
+                total_bookings=event.total_bookings or 0,
+                occupancy_percentage=event.get_occupancy_percentage(),
+                potential_revenue=event.get_potential_revenue()
+            )
+            for event in events
+        ]

@@ -29,3 +29,26 @@ class EventResponseSchema(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class EventManagementSchema(BaseModel):
+    """Pydantic schema for event management view with statistics"""
+    id: int
+    title: str
+    description: str
+    venue: str
+    date_time: datetime
+    capacity: int
+    price: Decimal
+    status: EventStatus
+    created_at: datetime
+    # Statistics fields
+    total_tickets_sold: int
+    available_tickets: int
+    total_revenue: Decimal
+    total_bookings: int
+    occupancy_percentage: float
+    potential_revenue: Decimal
+    
+    class Config:
+        from_attributes = True

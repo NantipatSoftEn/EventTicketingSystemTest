@@ -85,6 +85,11 @@ class EventListApiResponse(ApiListResponse[dict]):
     pass
 
 
+class EventManagementApiResponse(ApiListResponse[dict]):
+    """API response for event management data with statistics"""
+    pass
+
+
 class BookingListApiResponse(ApiListResponse[dict]):
     """API response for booking list data"""
     pass

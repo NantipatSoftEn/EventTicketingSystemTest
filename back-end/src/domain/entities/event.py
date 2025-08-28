@@ -23,6 +23,10 @@ class Event:
     price: Decimal
     status: EventStatus
     created_at: Optional[datetime] = None
+    # Computed fields for statistics (optional for backwards compatibility)
+    total_tickets_sold: Optional[int] = None
+    total_revenue: Optional[Decimal] = None
+    total_bookings: Optional[int] = None
     
     def _get_current_datetime(self) -> datetime:
         """Get current datetime in the same timezone as event datetime"""
@@ -67,3 +71,19 @@ class Event:
         if quantity <= 0:
             raise ValueError("Quantity must be positive")
         return self.price * quantity
+
+    def get_available_tickets(self) -> int:
+        """Get available tickets count"""
+        if self.total_tickets_sold is None:
+            return self.capacity  # Fallback if statistics not loaded
+        return self.capacity - self.total_tickets_sold
+    
+    def get_occupancy_percentage(self) -> float:
+        """Get occupancy percentage"""
+        if self.total_tickets_sold is None or self.capacity == 0:
+            return 0.0
+        return round((self.total_tickets_sold * 100.0) / self.capacity, 2)
+    
+    def get_potential_revenue(self) -> Decimal:
+        """Get potential revenue if all tickets are sold"""
+        return self.price * self.capacity
