@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Observable, Subject, BehaviorSubject, map, takeUntil } from 'rxjs';
 import { Event, EventManagement } from '../../../core/models/event.model';
 import { EventService } from '../../../core/services/event.service';
 
@@ -28,11 +29,18 @@ interface EventWithStats {
   selector: 'app-manage-events',
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './manage-events.component.html',
-  styleUrl: './manage-events.component.css'
+  styleUrl: './manage-events.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ManageEventsComponent implements OnInit {
-  events: EventWithStats[] = [];
-  isLoading = false;
+export class ManageEventsComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  // Reactive streams
+  events$: Observable<EventWithStats[]>;
+  totalRevenue$: Observable<number>;
+  totalTicketsSold$: Observable<number>;
+  activeEventsCount$: Observable<number>;
+  isLoading$ = new BehaviorSubject<boolean>(true);
 
   // Status options for the select dropdown
   statusOptions = [
@@ -41,41 +49,51 @@ export class ManageEventsComponent implements OnInit {
     { value: 'completed', label: 'Completed', class: 'bg-gray-100 text-gray-800' }
   ];
 
-  // Cache calculated values
-  private _totalRevenue = 0;
-  private _totalTicketsSold = 0;
-  private _activeEventsCount = 0;
-
   constructor(
     private eventService: EventService
-  ) {}
+  ) {
+    // Create reactive stream for management events with real-time updates
+    this.events$ = this.eventService.getManagementEventsStream().pipe(
+      map(managementEvents => managementEvents.map(this.transformManagementEvent)),
+      takeUntil(this.destroy$)
+    );
+
+    // Create derived streams for calculated values that update automatically
+    this.totalRevenue$ = this.events$.pipe(
+      map(events => events.reduce((sum, e) => sum + e.totalRevenue, 0))
+    );
+
+    this.totalTicketsSold$ = this.events$.pipe(
+      map(events => events.reduce((sum, e) => sum + e.totalTicketsSold, 0))
+    );
+
+    this.activeEventsCount$ = this.events$.pipe(
+      map(events => events.filter(e => e.isActive).length)
+    );
+  }
 
   ngOnInit(): void {
+    // Load initial events
     this.loadEvents();
   }
 
-  loadEvents(): void {
-    this.isLoading = true;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    // Use the optimized management endpoint instead of multiple API calls
-    this.eventService.getEventsForManagement().subscribe({
-      next: (managementEvents) => {
-        this.events = managementEvents.map(this.transformManagementEvent);
-        this.calculateTotals(); // คำนวณครั้งเดียวหลังโหลดข้อมูล
-        this.isLoading = false;
+  private loadEvents(): void {
+    this.eventService.getEventsForManagement().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.isLoading$.next(false);
       },
       error: (error) => {
         console.error('Error loading events:', error);
-        this.isLoading = false;
+        this.isLoading$.next(false);
       }
     });
-  }
-
-  // คำนวณครั้งเดียวและเก็บไว้
-  private calculateTotals(): void {
-    this._totalRevenue = this.events.reduce((sum, e) => sum + e.totalRevenue, 0);
-    this._totalTicketsSold = this.events.reduce((sum, e) => sum + e.totalTicketsSold, 0);
-    this._activeEventsCount = this.events.filter(e => e.isActive).length;
   }
 
   // Transform management event data to component format
@@ -109,25 +127,18 @@ export class ManageEventsComponent implements OnInit {
       return; // No change needed
     }
 
-    // Pass the status field directly to the service
-    const updateData = {
-      status: newStatus
-    };
-
-    this.eventService.updateEvent(event.id, updateData).subscribe({
+    // Use the new reactive update method
+    this.eventService.updateEventWithRefresh(event.id, { status: newStatus }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (updated: any) => {
         if (updated) {
-          event.status = newStatus;
-          event.isActive = newStatus === 'active';
-          this.calculateTotals(); // Recalculate when status changes
+          console.log('Event status updated successfully - reactive streams will update UI automatically');
         }
       },
       error: (error: any) => {
         console.error('Error updating event status:', error);
         alert('Failed to update event status. Please try again.');
-
-        // Revert the UI change if the API call failed
-        // This would need to be handled by resetting the select value
       }
     });
   }
@@ -191,15 +202,8 @@ export class ManageEventsComponent implements OnInit {
     return new Date(eventDate) < new Date();
   }
 
-  getActiveEventsCount(): number {
-    return this._activeEventsCount;
-  }
-
-  getTotalRevenue(): number {
-    return this._totalRevenue;
-  }
-
-  getTotalTicketsSold(): number {
-    return this._totalTicketsSold;
+  // Helper methods for template
+  trackByEventId(index: number, event: EventWithStats): number {
+    return event.id;
   }
 }

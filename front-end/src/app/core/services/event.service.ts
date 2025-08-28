@@ -10,7 +10,9 @@ import { DevModeService } from './dev-mode.service';
 export class EventService {
   private cachedEvents: Event[] = [];
   private eventsCache$ = new BehaviorSubject<Event[]>([]);
+  private managementEventsCache$ = new BehaviorSubject<EventManagement[]>([]);
   private isCacheLoaded = false;
+  private isManagementCacheLoaded = false;
   private mockEvents: Event[] = [
     {
       id: 1,
@@ -363,17 +365,69 @@ export class EventService {
   // Get events with management statistics - optimized single API call
   getEventsForManagement(): Observable<EventManagement[]> {
     if (this.devModeService.isDevMode) {
-      // For dev mode, transform mock data to management format
-      return this.getMockEventsForManagement();
+      // For dev mode, load and cache management data if not already loaded
+      if (!this.isManagementCacheLoaded) {
+        return this.loadManagementEventsFromMock().pipe(
+          map(events => {
+            this.managementEventsCache$.next(events);
+            this.isManagementCacheLoaded = true;
+            return events;
+          })
+        );
+      } else {
+        return this.managementEventsCache$.asObservable();
+      }
     } else {
-      return this.apiService.getEventsForManagement().pipe(
-        catchError(error => {
-          console.error('Error fetching management events from API:', error);
-          // Fallback to empty array on error
-          return of([]);
-        })
-      );
+      if (!this.isManagementCacheLoaded) {
+        return this.apiService.getEventsForManagement().pipe(
+          map(events => {
+            this.managementEventsCache$.next(events);
+            this.isManagementCacheLoaded = true;
+            return events;
+          }),
+          catchError(error => {
+            console.error('Error fetching management events from API:', error);
+            return of([]);
+          })
+        );
+      } else {
+        return this.managementEventsCache$.asObservable();
+      }
     }
+  }
+
+  // Get reactive stream of management events
+  getManagementEventsStream(): Observable<EventManagement[]> {
+    return this.managementEventsCache$.asObservable();
+  }
+
+  // Update event and refresh management cache
+  updateEventWithRefresh(id: string | number, event: Partial<Event> & { status?: string }): Observable<Event | null> {
+    return this.updateEvent(id, event).pipe(
+      map(updatedEvent => {
+        if (updatedEvent) {
+          // Update the management cache to trigger reactive updates
+          this.updateManagementEventInCache(id, event);
+        }
+        return updatedEvent;
+      })
+    );
+  }
+
+  private updateManagementEventInCache(id: string | number, updateData: Partial<Event> & { status?: string }): void {
+    const numericId = typeof id === 'string' ? parseInt(id) : id;
+    const currentEvents = this.managementEventsCache$.value;
+    const updatedEvents = currentEvents.map(event => {
+      if (event.id === numericId && updateData.status) {
+        return { ...event, status: updateData.status };
+      }
+      return event;
+    });
+    this.managementEventsCache$.next(updatedEvents);
+  }
+
+  private loadManagementEventsFromMock(): Observable<EventManagement[]> {
+    return this.getMockEventsForManagement();
   }
 
   // Mock events for management (dev mode)

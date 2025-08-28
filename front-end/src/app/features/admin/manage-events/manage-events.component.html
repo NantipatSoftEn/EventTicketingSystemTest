@@ -11,13 +11,13 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="text-center py-12">
+  <div *ngIf="isLoading$ | async" class="text-center py-12">
     <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     <p class="mt-4 text-gray-600">Loading events...</p>
   </div>
 
   <!-- No Events -->
-  <div *ngIf="!isLoading && events.length === 0" class="text-center py-12">
+  <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length === 0" class="text-center py-12">
     <div class="text-gray-400 mb-4">
       <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -31,7 +31,7 @@
   </div>
 
   <!-- Events Table -->
-  <div *ngIf="!isLoading && events.length > 0" class="bg-white rounded-lg shadow-md overflow-hidden">
+  <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length! > 0" class="bg-white rounded-lg shadow-md overflow-hidden">
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -57,7 +57,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr *ngFor="let event of events" class="hover:bg-gray-50">
+          <tr *ngFor="let event of events$ | async; trackBy: trackByEventId" class="hover:bg-gray-50">
             <!-- Event Info -->
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
@@ -149,30 +149,30 @@
   </div>
 
   <!-- Summary Stats -->
-  <div *ngIf="!isLoading && events.length > 0" class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length! > 0" class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-sm text-gray-600">Total Events</div>
-      <div class="text-2xl font-bold text-gray-900">{{ events.length }}</div>
+      <div class="text-2xl font-bold text-gray-900">{{ (events$ | async)?.length || 0 }}</div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-sm text-gray-600">Active Events</div>
       <div class="text-2xl font-bold text-green-600">
-        {{ getActiveEventsCount() }}
+        {{ activeEventsCount$ | async }}
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-sm text-gray-600">Total Revenue</div>
       <div class="text-2xl font-bold text-blue-600">
-        {{ formatPrice(getTotalRevenue()) }}
+        {{ formatPrice((totalRevenue$ | async) || 0) }}
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-sm text-gray-600">Tickets Sold</div>
       <div class="text-2xl font-bold text-purple-600">
-        {{ getTotalTicketsSold() }}
+        {{ totalTicketsSold$ | async }}
       </div>
     </div>
   </div>

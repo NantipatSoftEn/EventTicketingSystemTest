@@ -5,12 +5,17 @@
 
 set -e
 
+# Load environment variables from .env file
+if [ -f ".env" ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
 # Database configuration
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_NAME="event_ticketing"
-DB_USER="ticketing_user"
-DB_PASSWORD="ticketing_password"
+DB_HOST="${POSTGRES_HOST:-localhost}"
+DB_PORT="${POSTGRES_PORT:-5432}"
+DB_NAME="${POSTGRES_DB:-event_ticketing}"
+DB_USER="${POSTGRES_USER:-ticketing_user}"
+DB_PASSWORD="${POSTGRES_PASSWORD:-ticketing_password}"
 
 # Migration directory
 MIGRATIONS_DIR="./migrations"
@@ -31,7 +36,7 @@ print_message() {
 # Function to check if database is accessible
 check_database() {
     print_message $YELLOW "Checking database connection..."
-    if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c '\q' 2>/dev/null; then
+    if docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -c '\q' 2>/dev/null; then
         print_message $GREEN "✓ Database connection successful"
         return 0
     else
@@ -44,7 +49,7 @@ check_database() {
 # Function to create migration tracking table
 create_migration_table() {
     print_message $YELLOW "Creating migration tracking table..."
-    PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
+    docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -c "
         CREATE TABLE IF NOT EXISTS schema_migrations (
             id SERIAL PRIMARY KEY,
             migration_name VARCHAR(255) UNIQUE NOT NULL,
@@ -57,7 +62,7 @@ create_migration_table() {
 # Function to check if migration has been applied
 is_migration_applied() {
     local migration_name=$1
-    local count=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "
+    local count=$(docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -t -c "
         SELECT COUNT(*) FROM schema_migrations WHERE migration_name = '$migration_name';
     " 2>/dev/null | tr -d ' ')
     
@@ -71,7 +76,7 @@ is_migration_applied() {
 # Function to mark migration as applied
 mark_migration_applied() {
     local migration_name=$1
-    PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
+    docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -c "
         INSERT INTO schema_migrations (migration_name) VALUES ('$migration_name');
     " >/dev/null
 }
@@ -88,7 +93,9 @@ apply_migration() {
     
     print_message $YELLOW "📄 Applying migration: $migration_name"
     
-    if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$migration_file" >/dev/null 2>&1; then
+    # Copy migration file to container and execute it
+    if docker cp "$migration_file" event_ticketing_postgres:/tmp/migration.sql && \
+       docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -f "/tmp/migration.sql" >/dev/null 2>&1; then
         mark_migration_applied "$migration_name"
         print_message $GREEN "✓ Successfully applied $migration_name"
         return 0
@@ -157,7 +164,7 @@ reset_database() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_message $YELLOW "Resetting database..."
-        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
+        docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -c "
             DROP SCHEMA public CASCADE;
             CREATE SCHEMA public;
             GRANT ALL ON SCHEMA public TO ticketing_user;
