@@ -38,6 +38,7 @@ GET /api/v1/bookings/user/1
 | `POST /api/v1/events` | Create event |
 | `GET /api/v1/events/{id}` | Get event by ID |
 | `PUT /api/v1/events/{id}` | Update event |
+| `DELETE /api/v1/events/{id}` | Delete event (admin only) |
 | `POST /api/v1/bookings` | Create booking |
 | `GET /api/v1/bookings/user/{id}` | Get user bookings |
 | `GET /api/v1/bookings/event/{id}` | Get event bookings |

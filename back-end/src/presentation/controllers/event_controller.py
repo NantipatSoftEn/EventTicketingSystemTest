@@ -138,3 +138,35 @@ class EventController:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
             )
+    
+    async def delete_event(self, event_id: int, admin_user_id: int = 1) -> dict:
+        """Delete an event (admin only)"""
+        try:
+            # Validate admin access
+            await self._user_use_cases.validate_admin_access(admin_user_id)
+            
+            # Delete the event
+            deleted = await self._event_use_cases.delete_event(event_id)
+            
+            if not deleted:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Event not found"
+                )
+            
+            return {"message": "Event deleted successfully"}
+        except ValueError as e:
+            if "Admin access required" in str(e):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=str(e)
+                )
+            elif "not found" in str(e).lower():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e)
+                )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )

@@ -50,3 +50,13 @@ async def update_event(event_id: int, event_data: EventCreateSchema, admin_user_
         data=prepare_response_data(event),
         message="Event updated successfully"
     )
+
+
+@router.delete("/{event_id}")
+async def delete_event(event_id: int, admin_user_id: int = 1):
+    """Delete event by ID (admin only)"""
+    result = await container.event_controller.delete_event(event_id, admin_user_id)
+    return ApiResponse.success_response(
+        data=None,
+        message=result["message"]
+    )

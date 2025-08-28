@@ -119,6 +119,20 @@ POST /api/v1/events
 PUT /api/v1/events/{id}
 ```
 
+### Delete Event (Admin Only)
+```http
+DELETE /api/v1/events/{id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Event deleted successfully",
+  "data": null
+}
+```
+
 ## 📅 Bookings API
 
 ### Create Booking

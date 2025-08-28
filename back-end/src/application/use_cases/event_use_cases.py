@@ -113,3 +113,14 @@ class EventUseCases:
             status=saved_event.status,
             created_at=saved_event.created_at
         )
+    
+    async def delete_event(self, event_id: int) -> bool:
+        """Delete an event"""
+        # Check if event exists
+        existing_event = await self._event_repository.get_by_id(event_id)
+        if not existing_event:
+            raise ValueError("Event not found")
+        
+        # Delete the event
+        deleted = await self._event_repository.delete(event_id)
+        return deleted
