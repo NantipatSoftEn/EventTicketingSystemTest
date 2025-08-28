@@ -108,8 +108,8 @@
 
             <!-- Status -->
             <td class="px-6 py-4 whitespace-nowrap">
-              <span [class]="'px-2 py-1 rounded-full text-xs font-medium ' + getEventStatusClass(event.isActive)">
-                {{ event.isActive ? 'Active' : 'Inactive' }}
+              <span [class]="'px-2 py-1 rounded-full text-xs font-medium ' + getEventStatusClass(event.status)">
+                {{ getStatusLabel(event.status) }}
               </span>
             </td>
 
@@ -123,13 +123,15 @@
                   View Details
                 </a>
 
-                <button
-                  (click)="toggleEventStatus(event)"
-                  [class]="event.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'"
-                  class="text-left text-xs"
+                <select
+                  [value]="event.status"
+                  (change)="updateEventStatus(event, $any($event.target).value)"
+                  class="text-xs border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"
                 >
-                  {{ event.isActive ? 'Deactivate' : 'Activate' }}
-                </button>
+                  <option value="active">Active</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed</option>
+                </select>
 
                 <a
                   routerLink="/admin/event-bookings"

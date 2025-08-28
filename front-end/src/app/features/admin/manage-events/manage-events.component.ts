@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { Event, EventManagement } from '../../../core/models/event.model';
 import { EventService } from '../../../core/services/event.service';
 
@@ -16,6 +17,7 @@ interface EventWithStats {
   availableTickets: number;
   image: string;
   isActive: boolean;
+  status: string;
   createdAt: Date;
   totalBookings: number;
   totalRevenue: number;
@@ -24,13 +26,20 @@ interface EventWithStats {
 
 @Component({
   selector: 'app-manage-events',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './manage-events.component.html',
   styleUrl: './manage-events.component.css'
 })
 export class ManageEventsComponent implements OnInit {
   events: EventWithStats[] = [];
   isLoading = false;
+
+  // Status options for the select dropdown
+  statusOptions = [
+    { value: 'active', label: 'Active', class: 'bg-green-100 text-green-800' },
+    { value: 'cancelled', label: 'Cancelled', class: 'bg-red-100 text-red-800' },
+    { value: 'completed', label: 'Completed', class: 'bg-gray-100 text-gray-800' }
+  ];
 
   // Cache calculated values
   private _totalRevenue = 0;
@@ -87,6 +96,7 @@ export class ManageEventsComponent implements OnInit {
       availableTickets: mgmtEvent.available_tickets,
       image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop',
       isActive: mgmtEvent.status === 'active',
+      status: mgmtEvent.status,
       createdAt: new Date(mgmtEvent.created_at),
       totalBookings: mgmtEvent.total_bookings,
       totalRevenue: parseFloat(mgmtEvent.total_revenue),
@@ -94,19 +104,30 @@ export class ManageEventsComponent implements OnInit {
     };
   }
 
-  toggleEventStatus(event: EventWithStats): void {
-    const updatedEvent = { ...event, isActive: !event.isActive };
+  updateEventStatus(event: EventWithStats, newStatus: string): void {
+    if (newStatus === event.status) {
+      return; // No change needed
+    }
 
-    this.eventService.updateEvent(event.id, { isActive: updatedEvent.isActive }).subscribe({
-      next: (updated) => {
+    // Pass the status field directly to the service
+    const updateData = {
+      status: newStatus
+    };
+
+    this.eventService.updateEvent(event.id, updateData).subscribe({
+      next: (updated: any) => {
         if (updated) {
-          event.isActive = updatedEvent.isActive;
-          this.calculateTotals(); // คำนวณใหม่เมื่อมีการเปลี่ยนแปลง
+          event.status = newStatus;
+          event.isActive = newStatus === 'active';
+          this.calculateTotals(); // Recalculate when status changes
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error updating event status:', error);
         alert('Failed to update event status. Please try again.');
+
+        // Revert the UI change if the API call failed
+        // This would need to be handled by resetting the select value
       }
     });
   }
@@ -126,10 +147,30 @@ export class ManageEventsComponent implements OnInit {
     }).format(price);
   }
 
-  getEventStatusClass(isActive: boolean): string {
-    return isActive
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
+  getEventStatusClass(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'completed':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'Active';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status;
+    }
   }
 
   getAvailabilityStatus(event: EventWithStats): { text: string; class: string } {

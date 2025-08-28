@@ -18,6 +18,18 @@ class EventCreateDTO:
 
 
 @dataclass
+class EventPatchDTO:
+    """DTO for partially updating an event"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    venue: Optional[str] = None
+    date_time: Optional[datetime] = None
+    capacity: Optional[int] = None
+    price: Optional[Decimal] = None
+    status: Optional[EventStatus] = None
+
+
+@dataclass
 class EventResponseDTO:
     """DTO for event response"""
     id: int

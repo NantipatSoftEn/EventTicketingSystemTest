@@ -2,7 +2,7 @@ from typing import List
 from datetime import datetime
 from ...domain.entities.event import Event, EventStatus
 from ...domain.repositories.event_repository import EventRepository
-from ..dtos.event_dto import EventCreateDTO, EventResponseDTO, EventManagementDTO
+from ..dtos.event_dto import EventCreateDTO, EventResponseDTO, EventManagementDTO, EventPatchDTO
 
 
 class EventUseCases:
@@ -95,6 +95,41 @@ class EventUseCases:
             capacity=event_dto.capacity,
             price=event_dto.price,
             status=event_dto.status,
+            created_at=existing_event.created_at
+        )
+        
+        # Save updated event
+        saved_event = await self._event_repository.update(updated_event)
+        
+        # Return DTO
+        return EventResponseDTO(
+            id=saved_event.id,
+            title=saved_event.title,
+            description=saved_event.description,
+            venue=saved_event.venue,
+            date_time=saved_event.date_time,
+            capacity=saved_event.capacity,
+            price=saved_event.price,
+            status=saved_event.status,
+            created_at=saved_event.created_at
+        )
+    
+    async def patch_event(self, event_id: int, event_dto: EventPatchDTO) -> EventResponseDTO:
+        """Partially update an existing event"""
+        existing_event = await self._event_repository.get_by_id(event_id)
+        if not existing_event:
+            raise ValueError("Event not found")
+        
+        # Update only the provided fields
+        updated_event = Event(
+            id=existing_event.id,
+            title=event_dto.title if event_dto.title is not None else existing_event.title,
+            description=event_dto.description if event_dto.description is not None else existing_event.description,
+            venue=event_dto.venue if event_dto.venue is not None else existing_event.venue,
+            date_time=event_dto.date_time if event_dto.date_time is not None else existing_event.date_time,
+            capacity=event_dto.capacity if event_dto.capacity is not None else existing_event.capacity,
+            price=event_dto.price if event_dto.price is not None else existing_event.price,
+            status=event_dto.status if event_dto.status is not None else existing_event.status,
             created_at=existing_event.created_at
         )
         

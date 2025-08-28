@@ -246,15 +246,19 @@ export class EventService {
     }
   }
 
-  updateEvent(id: string | number, event: Partial<Event>): Observable<Event | null> {
+  updateEvent(id: string | number, event: Partial<Event> & { status?: string }): Observable<Event | null> {
     const eventId = typeof id === 'string' ? parseInt(id) : id;
 
     if (this.devModeService.isDevMode) {
       return this.updateMockEvent(eventId, event);
     } else {
-      return this.apiService.updateEvent(eventId.toString(), event).pipe(
+      //  change to patch to allow partial updates
+      return  this.apiService.patchEvent(eventId.toString(), event).pipe(
         catchError(() => of(null))
       );
+      // return this.apiService.updateEvent(eventId.toString(), event).pipe(
+      //   catchError(() => of(null))
+      // );
     }
   }
 
@@ -327,10 +331,17 @@ export class EventService {
     return of(newEvent).pipe(delay(500));
   }
 
-  private updateMockEvent(id: number, event: Partial<Event>): Observable<Event | null> {
+  private updateMockEvent(id: number, event: Partial<Event> & { status?: string }): Observable<Event | null> {
     const index = this.mockEvents.findIndex(e => e.id === id);
     if (index !== -1) {
-      this.mockEvents[index] = { ...this.mockEvents[index], ...event };
+      const updatedEvent = { ...this.mockEvents[index], ...event };
+
+      // Handle status update
+      if (event.status) {
+        updatedEvent.isActive = event.status === 'active';
+      }
+
+      this.mockEvents[index] = updatedEvent;
       return of(this.mockEvents[index]).pipe(delay(500));
     }
     return of(null);

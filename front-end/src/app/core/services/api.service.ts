@@ -67,10 +67,19 @@ export class ApiService {
     );
   }
 
-  updateEvent(id: string, event: Partial<Event>): Observable<Event> {
+  updateEvent(id: string, event: Partial<Event> & { status?: string }): Observable<Event> {
     const apiEvent = this.transformFrontendEventToApi(event);
     return this.handleResponse(
       this.http.put<ApiResponse<any>>(`${this.baseUrl}/events/${id}`, apiEvent)
+    ).pipe(
+      map(apiEvent => this.transformApiEventToFrontend(apiEvent))
+    );
+  }
+
+  patchEvent(id: string, event: Partial<Event> & { status?: string }): Observable<Event> {
+    const apiEvent = this.transformFrontendEventToApi(event);
+    return this.handleResponse(
+      this.http.patch<ApiResponse<any>>(`${this.baseUrl}/events/${id}`, apiEvent)
     ).pipe(
       map(apiEvent => this.transformApiEventToFrontend(apiEvent))
     );
@@ -99,7 +108,7 @@ export class ApiService {
   }
 
   // Transform frontend Event model to API format
-  private transformFrontendEventToApi(event: Partial<Event>): any {
+  private transformFrontendEventToApi(event: Partial<Event> & { status?: string }): any {
     const apiEvent: any = {};
 
     if (event.title) apiEvent.title = event.title;
@@ -113,7 +122,13 @@ export class ApiService {
     }
     if (event.totalTickets) apiEvent.capacity = event.totalTickets;
     if (event.price) apiEvent.price = event.price; // Keep as number, not string
-    if (event.isActive !== undefined) apiEvent.status = event.isActive ? 'active' : 'inactive';
+
+    // Handle status field - prefer explicit status over isActive
+    if (event.status) {
+      apiEvent.status = event.status;
+    } else if (event.isActive !== undefined) {
+      apiEvent.status = event.isActive ? 'active' : 'cancelled';
+    }
 
     return apiEvent;
   }

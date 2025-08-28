@@ -15,6 +15,17 @@ class EventCreateSchema(BaseModel):
     status: EventStatus = EventStatus.ACTIVE
 
 
+class EventPatchSchema(BaseModel):
+    """Pydantic schema for partially updating an event"""
+    title: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    venue: str | None = Field(None, min_length=1, max_length=200)
+    date_time: datetime | None = None
+    capacity: int | None = Field(None, gt=0)
+    price: Decimal | None = Field(None, gt=0)
+    status: EventStatus | None = None
+
+
 class EventResponseSchema(BaseModel):
     """Pydantic schema for event response"""
     id: int
