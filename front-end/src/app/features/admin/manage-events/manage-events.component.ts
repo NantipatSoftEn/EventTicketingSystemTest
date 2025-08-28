@@ -1,12 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Event } from '../../../core/models/event.model';
+import { Event, EventManagement } from '../../../core/models/event.model';
 import { EventService } from '../../../core/services/event.service';
-import { BookingService } from '../../../core/services/booking.service';
-import { forkJoin } from 'rxjs';
 
-interface EventWithStats extends Event {
+interface EventWithStats {
+  id: number;
+  title: string;
+  description: string;
+  venue: string;
+  date: Date;
+  time: string;
+  price: number;
+  totalTickets: number;
+  availableTickets: number;
+  image: string;
+  isActive: boolean;
+  createdAt: Date;
   totalBookings: number;
   totalRevenue: number;
   totalTicketsSold: number;
@@ -23,8 +33,7 @@ export class ManageEventsComponent implements OnInit {
   isLoading = false;
 
   constructor(
-    private eventService: EventService,
-    private bookingService: BookingService
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -34,9 +43,11 @@ export class ManageEventsComponent implements OnInit {
   loadEvents(): void {
     this.isLoading = true;
 
-    this.eventService.getEvents().subscribe({
-      next: (events) => {
-        this.loadEventStats(events);
+    // Use the optimized management endpoint instead of multiple API calls
+    this.eventService.getEventsForManagement().subscribe({
+      next: (managementEvents) => {
+        this.events = managementEvents.map(this.transformManagementEvent);
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading events:', error);
@@ -45,39 +56,29 @@ export class ManageEventsComponent implements OnInit {
     });
   }
 
-  loadEventStats(events: Event[]): void {
-    if (events.length === 0) {
-      this.events = [];
-      this.isLoading = false;
-      return;
-    }
-
-    const statsRequests = events.map(event =>
-      this.bookingService.getBookingStats(event.id)
-    );
-
-    forkJoin(statsRequests).subscribe({
-      next: (stats) => {
-        this.events = events.map((event, index) => ({
-          ...event,
-          totalBookings: stats[index].totalBookings,
-          totalRevenue: stats[index].totalRevenue,
-          totalTicketsSold: stats[index].totalTickets
-        }));
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading event stats:', error);
-        // Still show events without stats
-        this.events = events.map(event => ({
-          ...event,
-          totalBookings: 0,
-          totalRevenue: 0,
-          totalTicketsSold: 0
-        }));
-        this.isLoading = false;
-      }
-    });
+  // Transform management event data to component format
+  private transformManagementEvent(mgmtEvent: EventManagement): EventWithStats {
+    return {
+      id: mgmtEvent.id,
+      title: mgmtEvent.title,
+      description: mgmtEvent.description,
+      venue: mgmtEvent.venue,
+      date: new Date(mgmtEvent.date_time),
+      time: new Date(mgmtEvent.date_time).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }),
+      price: parseFloat(mgmtEvent.price),
+      totalTickets: mgmtEvent.capacity,
+      availableTickets: mgmtEvent.available_tickets,
+      image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop',
+      isActive: mgmtEvent.status === 'active',
+      createdAt: new Date(mgmtEvent.created_at),
+      totalBookings: mgmtEvent.total_bookings,
+      totalRevenue: parseFloat(mgmtEvent.total_revenue),
+      totalTicketsSold: mgmtEvent.total_tickets_sold
+    };
   }
 
   toggleEventStatus(event: EventWithStats): void {
@@ -117,7 +118,7 @@ export class ManageEventsComponent implements OnInit {
       : 'bg-red-100 text-red-800';
   }
 
-  getAvailabilityStatus(event: Event): { text: string; class: string } {
+  getAvailabilityStatus(event: EventWithStats): { text: string; class: string } {
     const availabilityPercentage = (event.availableTickets / event.totalTickets) * 100;
 
     if (availabilityPercentage === 0) {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Event, EventFilters } from '../models/event.model';
+import { Event, EventFilters, EventManagement } from '../models/event.model';
 
 // API Response interface based on the standardized format
 interface ApiResponse<T> {
@@ -172,6 +172,13 @@ export class ApiService {
   getBookingStats(eventId: string): Observable<any> {
     return this.handleResponse(
       this.http.get<ApiResponse<any>>(`${this.baseUrl}/bookings/event/${eventId}/stats`)
+    );
+  }
+
+  // Get events with management statistics (solves N+1 problem)
+  getEventsForManagement(): Observable<EventManagement[]> {
+    return this.handleResponse(
+      this.http.get<ApiResponse<EventManagement[]>>(`${this.baseUrl}/events/management/view`)
     );
   }
 }

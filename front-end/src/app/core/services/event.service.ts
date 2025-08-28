@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay, map, catchError, BehaviorSubject } from 'rxjs';
-import { Event, EventFilters } from '../models/event.model';
+import { Event, EventFilters, EventManagement } from '../models/event.model';
 import { ApiService } from './api.service';
 import { DevModeService } from './dev-mode.service';
 
@@ -347,5 +347,80 @@ export class EventService {
         return this.getMockEventById(parseInt(id));
       })
     );
+  }
+
+  // Get events with management statistics - optimized single API call
+  getEventsForManagement(): Observable<EventManagement[]> {
+    if (this.devModeService.isDevMode) {
+      // For dev mode, transform mock data to management format
+      return this.getMockEventsForManagement();
+    } else {
+      return this.apiService.getEventsForManagement().pipe(
+        catchError(error => {
+          console.error('Error fetching management events from API:', error);
+          // Fallback to empty array on error
+          return of([]);
+        })
+      );
+    }
+  }
+
+  // Mock events for management (dev mode)
+  private getMockEventsForManagement(): Observable<EventManagement[]> {
+    const mockManagementData: EventManagement[] = [
+      {
+        id: 1,
+        title: 'Summer Music Festival 2025',
+        description: 'Join us for an unforgettable night of music featuring top artists from around the world.',
+        venue: 'Central Park Arena',
+        date_time: '2025-09-15T18:00:00Z',
+        capacity: 5000,
+        price: '75.00',
+        status: 'active',
+        created_at: '2025-01-15T00:00:00Z',
+        total_tickets_sold: 1750,
+        available_tickets: 3250,
+        total_revenue: '131250.00',
+        total_bookings: 875,
+        occupancy_percentage: 35.0,
+        potential_revenue: '375000.00'
+      },
+      {
+        id: 2,
+        title: 'Tech Innovation Conference',
+        description: 'Discover the latest trends in technology, AI, and innovation.',
+        venue: 'Convention Center Downtown',
+        date_time: '2025-09-22T09:00:00Z',
+        capacity: 1000,
+        price: '150.00',
+        status: 'active',
+        created_at: '2025-02-01T00:00:00Z',
+        total_tickets_sold: 550,
+        available_tickets: 450,
+        total_revenue: '82500.00',
+        total_bookings: 275,
+        occupancy_percentage: 55.0,
+        potential_revenue: '150000.00'
+      },
+      {
+        id: 3,
+        title: 'Food & Wine Festival',
+        description: 'Indulge in culinary delights from renowned chefs.',
+        venue: 'Riverside Park',
+        date_time: '2025-09-28T12:00:00Z',
+        capacity: 2000,
+        price: '95.00',
+        status: 'active',
+        created_at: '2025-02-15T00:00:00Z',
+        total_tickets_sold: 1200,
+        available_tickets: 800,
+        total_revenue: '114000.00',
+        total_bookings: 600,
+        occupancy_percentage: 60.0,
+        potential_revenue: '190000.00'
+      }
+    ];
+
+    return of(mockManagementData).pipe(delay(500));
   }
 }
