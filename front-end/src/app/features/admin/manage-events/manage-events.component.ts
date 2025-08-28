@@ -32,6 +32,11 @@ export class ManageEventsComponent implements OnInit {
   events: EventWithStats[] = [];
   isLoading = false;
 
+  // Cache calculated values
+  private _totalRevenue = 0;
+  private _totalTicketsSold = 0;
+  private _activeEventsCount = 0;
+
   constructor(
     private eventService: EventService
   ) {}
@@ -47,6 +52,7 @@ export class ManageEventsComponent implements OnInit {
     this.eventService.getEventsForManagement().subscribe({
       next: (managementEvents) => {
         this.events = managementEvents.map(this.transformManagementEvent);
+        this.calculateTotals(); // คำนวณครั้งเดียวหลังโหลดข้อมูล
         this.isLoading = false;
       },
       error: (error) => {
@@ -54,6 +60,13 @@ export class ManageEventsComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  // คำนวณครั้งเดียวและเก็บไว้
+  private calculateTotals(): void {
+    this._totalRevenue = this.events.reduce((sum, e) => sum + e.totalRevenue, 0);
+    this._totalTicketsSold = this.events.reduce((sum, e) => sum + e.totalTicketsSold, 0);
+    this._activeEventsCount = this.events.filter(e => e.isActive).length;
   }
 
   // Transform management event data to component format
@@ -88,6 +101,7 @@ export class ManageEventsComponent implements OnInit {
       next: (updated) => {
         if (updated) {
           event.isActive = updatedEvent.isActive;
+          this.calculateTotals(); // คำนวณใหม่เมื่อมีการเปลี่ยนแปลง
         }
       },
       error: (error) => {
@@ -137,14 +151,14 @@ export class ManageEventsComponent implements OnInit {
   }
 
   getActiveEventsCount(): number {
-    return this.events.filter(e => e.isActive).length;
+    return this._activeEventsCount;
   }
 
   getTotalRevenue(): number {
-    return this.events.reduce((sum, e) => sum + e.totalRevenue, 0);
+    return this._totalRevenue;
   }
 
   getTotalTicketsSold(): number {
-    return this.events.reduce((sum, e) => sum + e.totalTicketsSold, 0);
+    return this._totalTicketsSold;
   }
 }
