@@ -1,11 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { EventService } from '../../core/services/event.service';
-import { BookingService } from '../../core/services/booking.service';
-import { Event } from '../../core/models/event.model';
-import { forkJoin } from 'rxjs';
+import { AdminStateService, AdminDashboardStats } from '../../core/services/admin-state.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-admin-panel',
@@ -13,55 +11,67 @@ import { forkJoin } from 'rxjs';
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.css'
 })
-export class AdminPanelComponent implements OnInit {
-  totalEvents = 0;
-  totalRevenue = 0;
-  totalBookings = 0;
-  totalTicketsSold = 0;
-  isLoading = false;
+export class AdminPanelComponent implements OnInit, OnDestroy {
+  stats: AdminDashboardStats = {
+    totalEvents: 0,
+    totalRevenue: 0,
+    totalBookings: 0,
+    totalTicketsSold: 0,
+    isLoading: false
+  };
+
+  private destroy$ = new Subject<void>();
+
+  // Computed properties for backward compatibility
+  get isLoading(): boolean {
+    return this.stats.isLoading;
+  }
+
+  get totalEvents(): number {
+    return this.stats.totalEvents;
+  }
+
+  get totalRevenue(): number {
+    return this.stats.totalRevenue;
+  }
+
+  get totalBookings(): number {
+    return this.stats.totalBookings;
+  }
+
+  get totalTicketsSold(): number {
+    return this.stats.totalTicketsSold;
+  }
 
   constructor(
     private authService: AuthService,
-    private eventService: EventService,
-    private bookingService: BookingService
+    private adminStateService: AdminStateService
   ) {}
 
   ngOnInit(): void {
-    this.loadDashboardStats();
+    // Subscribe to stats changes
+    this.adminStateService.stats$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(stats => {
+        this.stats = stats;
+      });
+
+    // Load initial data
+    this.adminStateService.loadDashboardStats();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDashboardStats(): void {
-    this.isLoading = true;
-
-    this.eventService.getEvents().subscribe({
-      next: (events) => {
-        this.totalEvents = events.length;
-        this.loadBookingStats(events);
-      },
-      error: (error) => {
-        console.error('Error loading events:', error);
-        this.isLoading = false;
-      }
-    });
+    this.adminStateService.refreshStats();
   }
 
-  loadBookingStats(events: Event[]): void {
-    const statsRequests = events.map(event =>
-      this.bookingService.getBookingStats(event.id)
-    );
-
-    forkJoin(statsRequests).subscribe({
-      next: (stats) => {
-        this.totalRevenue = stats.reduce((sum, stat) => sum + stat.totalRevenue, 0);
-        this.totalBookings = stats.reduce((sum, stat) => sum + stat.totalBookings, 0);
-        this.totalTicketsSold = stats.reduce((sum, stat) => sum + stat.totalTickets, 0);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading booking stats:', error);
-        this.isLoading = false;
-      }
-    });
+  loadBookingStats(): void {
+    // This method is now handled by the AdminStateService
+    // Keeping for backward compatibility but functionality moved to service
   }
 
   formatPrice(price: number): string {
@@ -73,6 +83,6 @@ export class AdminPanelComponent implements OnInit {
 
   isAdmin(): boolean {
     return true
-    return this.authService.isAdmin();
+    // return this.authService.isAdmin();
   }
 }
