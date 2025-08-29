@@ -1,2 +1,0 @@
-# Event Ticketing System
-

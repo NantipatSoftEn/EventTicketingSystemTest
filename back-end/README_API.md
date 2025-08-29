@@ -73,7 +73,44 @@ http://localhost:8000/api/v1
 ```
 
 ### API Versioning
-This API uses URL-based versioning. Current version is v1. All endpoints are prefixed with `/api/v1/`.
+This API uses URL-based versioning strategy for backward compatibility and scalability:
+
+- **Current Version**: v1 (stable)
+- **URL Pattern**: `/api/v1/`
+- **Version Discovery**: `GET /api` - Returns available versions and documentation links
+- **Future Versions**: v2 planned with enhanced features
+
+### Standardized Response Format
+All API endpoints return a consistent response structure:
+
+```json
+{
+  "success": boolean,
+  "message": "Descriptive message",
+  "data": {} | [] | null
+}
+```
+
+### Version Discovery
+```http
+GET /api
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "API version information retrieved successfully",
+  "data": {
+    "available_versions": ["v1"],
+    "default_version": "v1",
+    "current_version_url": "/api/v1",
+    "documentation": {
+      "v1": "/docs"
+    }
+  }
+}
+```
 
 ### Authentication Note
 This implementation includes admin role validation but doesn't include full authentication middleware. In production, implement proper JWT/OAuth authentication.
@@ -87,19 +124,23 @@ GET /api/v1/events
 
 **Response:**
 ```json
-[
-  {
-    "id": 1,
-    "title": "Rock Concert 2025",
-    "description": "An amazing rock concert...",
-    "venue": "Bangkok Arena",
-    "date_time": "2025-09-24T12:00:00",
-    "capacity": 5000,
-    "price": "1500.00",
-    "status": "active",
-    "created_at": "2025-08-25T12:00:00"
-  }
-]
+{
+  "success": true,
+  "message": "Events retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "title": "Rock Concert 2025",
+      "description": "An amazing rock concert...",
+      "venue": "Bangkok Arena",
+      "date_time": "2025-09-24T12:00:00",
+      "capacity": 5000,
+      "price": "1500.00",
+      "status": "active",
+      "created_at": "2025-08-25T12:00:00"
+    }
+  ]
+}
 ```
 
 ### Get Event Details
@@ -163,13 +204,17 @@ POST /api/v1/bookings
 **Response:**
 ```json
 {
-  "id": 1,
-  "user_id": 1,
-  "event_id": 1,
-  "quantity": 2,
-  "total_amount": "3000.00",
-  "booking_date": "2025-08-25T12:00:00",
-  "status": "confirmed"
+  "success": true,
+  "message": "Booking created successfully",
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "event_id": 1,
+    "quantity": 2,
+    "total_amount": "3000.00",
+    "booking_date": "2025-08-25T12:00:00",
+    "status": "confirmed"
+  }
 }
 ```
 
@@ -212,6 +257,82 @@ POST /api/v1/users
   "name": "John Doe",
   "phone": "0812345678",
   "role": "customer"
+}
+```
+
+## 📋 Complete API Reference
+
+### API Endpoints Summary
+
+| Method | Endpoint | Description | Admin Required |
+|--------|----------|-------------|----------------|
+| `GET` | `/api` | Get API version information | No |
+| `GET` | `/api/v1/users` | List all users | No |
+| `POST` | `/api/v1/users` | Create new user | No |
+| `GET` | `/api/v1/users/{id}` | Get user by ID | No |
+| `GET` | `/api/v1/events` | List all events | No |
+| `POST` | `/api/v1/events` | Create new event | Yes |
+| `GET` | `/api/v1/events/{id}` | Get event details | No |
+| `PUT` | `/api/v1/events/{id}` | Update event | Yes |
+| `DELETE` | `/api/v1/events/{id}` | Delete event | Yes |
+| `POST` | `/api/v1/bookings` | Create booking | No |
+| `GET` | `/api/v1/bookings/user/{id}` | Get user bookings | No |
+| `GET` | `/api/v1/bookings/event/{id}` | Get event bookings | Yes |
+| `PUT` | `/api/v1/bookings/{id}/status` | Update booking status | Yes |
+
+### Response Format Examples
+
+#### Success Response (Single Item)
+```json
+{
+  "success": true,
+  "message": "User retrieved successfully",
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "phone": "0812345678",
+    "role": "customer"
+  }
+}
+```
+
+#### Success Response (List)
+```json
+{
+  "success": true,
+  "message": "Events retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "title": "Concert",
+      "venue": "Arena"
+    }
+  ]
+}
+```
+
+#### Error Response
+```json
+{
+  "success": false,
+  "message": "Event not found",
+  "data": null
+}
+```
+
+#### Validation Error Response
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "data": {
+    "errors": [
+      {
+        "field": "capacity",
+        "message": "Must be greater than 0"
+      }
+    ]
+  }
 }
 ```
 
@@ -354,7 +475,83 @@ curl -X GET "http://localhost:8000/api/v1/events"
 ### Using the Interactive Docs
 Visit `http://localhost:8000/docs` for a complete interactive API documentation where you can test all endpoints directly.
 
-## 🚀 Production Considerations
+## � Migration Guide
+
+### Frontend Integration Updates
+
+When integrating with the new versioned API, update your frontend code to handle the new response format:
+
+#### Before (Old Format)
+```javascript
+// Old API call
+const response = await fetch('/api/events');
+const events = await response.json(); // Direct array
+
+// Error handling
+if (!response.ok) {
+  // Handle different error formats
+  console.error('API Error');
+}
+```
+
+#### After (New Format)
+```javascript
+// New API call with versioning
+const response = await fetch('/api/v1/events');
+const result = await response.json();
+
+if (result.success) {
+  const events = result.data; // Data is in result.data
+  console.log(result.message); // Success message
+} else {
+  console.error(result.message); // Standardized error message
+}
+```
+
+#### TypeScript Interface
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T | null;
+}
+
+// Usage
+const response: ApiResponse<Event[]> = await apiCall('/api/v1/events');
+```
+
+### API Client Example
+```typescript
+class ApiClient {
+  private baseUrl = 'http://localhost:8000/api/v1';
+
+  async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+    const result: ApiResponse<T> = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+    
+    return result.data!;
+  }
+
+  // Usage examples
+  async getEvents(): Promise<Event[]> {
+    return this.request<Event[]>('/events');
+  }
+
+  async createBooking(booking: CreateBookingRequest): Promise<Booking> {
+    return this.request<Booking>('/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(booking)
+    });
+  }
+}
+```
+
+## �🚀 Production Considerations
 
 ### Security
 - Implement proper JWT/OAuth authentication middleware
