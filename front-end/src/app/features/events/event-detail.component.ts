@@ -35,6 +35,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   availability$: Observable<TicketAvailability | null>;
   availabilityStatus$: Observable<{ text: string; class: string; disabled: boolean }>;
   isPollingAvailability$: Observable<boolean>;
+  currentAvailability: TicketAvailability | null = null;
 
   bookingForm = {
     quantity: 1,
@@ -92,6 +93,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     this.availability$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(availability => {
+      this.currentAvailability = availability;
       if (availability && this.event) {
         // Update local event data with real-time availability
         this.event.availableTickets = availability.availableTickets;
@@ -99,7 +101,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
         // Adjust quantity if it exceeds available tickets
         if (this.bookingForm.quantity > availability.availableTickets) {
-          this.bookingForm.quantity = Math.max(1, availability.availableTickets);
+          this.bookingForm.quantity = Math.max(1, Math.min(availability.availableTickets, this.bookingForm.quantity));
         }
       }
     });
@@ -130,17 +132,18 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  increaseQuantity(): void {
+  getCurrentAvailableTickets(): number {
     // Use real-time availability if available, fallback to event data
-    let maxTickets = this.event?.availableTickets || 0;
+    return this.currentAvailability?.availableTickets || this.event?.availableTickets || 0;
+  }
 
-    // Get current availability synchronously
-    this.availability$.pipe(takeUntil(this.destroy$)).subscribe(availability => {
-      if (availability) {
-        maxTickets = availability.availableTickets;
-      }
-    }).unsubscribe();
+  getMaxSelectableTickets(): number {
+    const available = this.getCurrentAvailableTickets();
+    return Math.max(0, available);
+  }
 
+  increaseQuantity(): void {
+    const maxTickets = this.getMaxSelectableTickets();
     if (this.bookingForm.quantity < maxTickets) {
       this.bookingForm.quantity++;
     }
@@ -154,19 +157,34 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   updateQuantity(event: any): void {
     const value = parseInt(event.target.value);
+    const maxTickets = this.getMaxSelectableTickets();
 
-    // Use real-time availability if available, fallback to event data
-    let maxTickets = this.event?.availableTickets || 0;
-
-    // Get current availability synchronously
-    this.availability$.pipe(takeUntil(this.destroy$)).subscribe(availability => {
-      if (availability) {
-        maxTickets = availability.availableTickets;
-      }
-    }).unsubscribe();
-
-    if (value >= 1 && value <= maxTickets) {
+    if (isNaN(value) || value < 1) {
+      this.bookingForm.quantity = 1;
+      event.target.value = 1;
+    } else if (value > maxTickets) {
+      this.bookingForm.quantity = maxTickets;
+      event.target.value = maxTickets;
+    } else {
       this.bookingForm.quantity = value;
+    }
+  }
+
+  onQuantityKeydown(event: KeyboardEvent): void {
+    // Allow: backspace, delete, tab, escape, enter, and .
+    if ([46, 8, 9, 27, 13, 110].indexOf(event.keyCode) !== -1 ||
+        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (event.keyCode === 65 && event.ctrlKey === true) ||
+        (event.keyCode === 67 && event.ctrlKey === true) ||
+        (event.keyCode === 86 && event.ctrlKey === true) ||
+        (event.keyCode === 88 && event.ctrlKey === true) ||
+        // Allow: home, end, left, right
+        (event.keyCode >= 35 && event.keyCode <= 39)) {
+      return;
+    }
+    // Ensure that it is a number and stop the keypress
+    if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
+      event.preventDefault();
     }
   }
 
@@ -176,6 +194,19 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   onSubmitBooking(): void {
     if (!this.event || !this.isFormValid() || !this.selectedTestUser) {
+      return;
+    }
+
+    // Double-check availability before submitting
+    const maxTickets = this.getMaxSelectableTickets();
+    if (this.bookingForm.quantity > maxTickets) {
+      this.bookingError = `Only ${maxTickets} tickets available. Please adjust your quantity.`;
+      this.bookingForm.quantity = Math.max(1, maxTickets);
+      return;
+    }
+
+    if (maxTickets === 0) {
+      this.bookingError = 'Sorry, this event is sold out.';
       return;
     }
 
@@ -218,12 +249,14 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   }
 
   isFormValid(): boolean {
+    const maxTickets = this.getMaxSelectableTickets();
     return !!(
       this.selectedTestUser &&
       this.bookingForm.userName.trim() &&
       this.bookingForm.quantity > 0 &&
-      this.event &&
-      this.bookingForm.quantity <= this.event.availableTickets
+      this.bookingForm.quantity <= maxTickets &&
+      maxTickets > 0 &&
+      this.event
     );
   }
 

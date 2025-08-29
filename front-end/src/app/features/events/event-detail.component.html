@@ -169,13 +169,16 @@
                 [class.opacity-50]="(availabilityStatus$ | async)?.disabled">
             <!-- Quantity Selector -->
             <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Number of Tickets</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Number of Tickets
+                <span class="text-sm text-gray-500">(Max: {{ getMaxSelectableTickets() }})</span>
+              </label>
               <div class="flex items-center space-x-3">
                 <button
                   type="button"
                   (click)="decreaseQuantity()"
                   [disabled]="bookingForm.quantity <= 1 || (availabilityStatus$ | async)?.disabled"
-                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md"
+                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md transition-colors"
                 >
                   -
                 </button>
@@ -183,19 +186,36 @@
                   type="number"
                   [value]="bookingForm.quantity"
                   (input)="updateQuantity($event)"
+                  (blur)="updateQuantity($event)"
+                  (keydown)="onQuantityKeydown($event)"
                   min="1"
-                  [max]="(availability$ | async)?.availableTickets || event.availableTickets"
-                  [disabled]="(availabilityStatus$ | async)?.disabled"
+                  [max]="getMaxSelectableTickets()"
+                  [disabled]="(availabilityStatus$ | async)?.disabled || getMaxSelectableTickets() === 0"
                   class="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   (click)="increaseQuantity()"
-                  [disabled]="bookingForm.quantity >= ((availability$ | async)?.availableTickets || event.availableTickets) || (availabilityStatus$ | async)?.disabled"
-                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md"
+                  [disabled]="bookingForm.quantity >= getMaxSelectableTickets() || (availabilityStatus$ | async)?.disabled"
+                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md transition-colors"
                 >
                   +
                 </button>
+              </div>
+              
+              <!-- Availability warning -->
+              <div *ngIf="getMaxSelectableTickets() === 0" class="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
+                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                No tickets available for booking
+              </div>
+              
+              <div *ngIf="getMaxSelectableTickets() > 0 && getMaxSelectableTickets() <= 5" class="mt-2 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-md">
+                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                Only {{ getMaxSelectableTickets() }} ticket(s) remaining!
               </div>
             </div>
 
@@ -244,7 +264,7 @@
             <!-- Submit Button -->
             <button
               type="submit"
-              [disabled]="!isFormValid() || isBooking || (availabilityStatus$ | async)?.disabled"
+              [disabled]="!isFormValid() || isBooking || (availabilityStatus$ | async)?.disabled || getMaxSelectableTickets() === 0"
               class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium text-lg transition-colors"
             >
               <span *ngIf="isBooking" class="flex items-center justify-center">
@@ -255,9 +275,11 @@
                 กำลังประมวลผล...
               </span>
               <span *ngIf="!isBooking">
-                <span *ngIf="(availabilityStatus$ | async)?.disabled">{{ (availabilityStatus$ | async)?.text || 'ขายหมดแล้ว' }}</span>
-                <span *ngIf="!(availabilityStatus$ | async)?.disabled && !selectedTestUser">กรุณาเลือกผู้ใช้งาน</span>
-                <span *ngIf="!(availabilityStatus$ | async)?.disabled && selectedTestUser">จองเลย</span>
+                <span *ngIf="getMaxSelectableTickets() === 0">ตั๋วขายหมดแล้ว</span>
+                <span *ngIf="getMaxSelectableTickets() > 0 && (availabilityStatus$ | async)?.disabled">{{ (availabilityStatus$ | async)?.text || 'ไม่สามารถจองได้' }}</span>
+                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && !selectedTestUser">กรุณาเลือกผู้ใช้งาน</span>
+                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && selectedTestUser && !isFormValid()">กรุณากรอกข้อมูลให้ครบถ้วน</span>
+                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && selectedTestUser && isFormValid()">จองตั๋ว {{ bookingForm.quantity }} ใบ ({{ formatPrice(getTotalPrice()) }})</span>
               </span>
             </button>
           </form>
