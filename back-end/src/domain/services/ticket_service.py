@@ -1,5 +1,6 @@
 import secrets
 import string
+from datetime import datetime
 from typing import List
 from ..repositories.ticket_repository import TicketRepository
 from ..entities.ticket import Ticket, TicketStatus
@@ -11,10 +12,17 @@ class TicketService:
     def __init__(self, ticket_repository: TicketRepository):
         self._ticket_repository = ticket_repository
     
-    def generate_unique_ticket_code(self, length: int = 12) -> str:
-        """Generate a unique secure ticket code"""
+    def generate_unique_ticket_code(self, length: int = 8) -> str:
+        """Generate a unique secure ticket code in format: TKT-YYYYMMDD-XXXXXXXX"""
+        # Get current date in YYYYMMDD format
+        date_str = datetime.now().strftime("%Y%m%d")
+        
+        # Generate random alphanumeric string for the suffix
         characters = string.ascii_uppercase + string.digits
-        return ''.join(secrets.choice(characters) for _ in range(length))
+        random_suffix = ''.join(secrets.choice(characters) for _ in range(length))
+        
+        # Combine into the required format: TKT-YYYYMMDD-XXXXXXXX
+        return f"TKT-{date_str}-{random_suffix}"
     
     async def generate_tickets_for_booking(self, booking_id: int, quantity: int) -> List[Ticket]:
         """Generate multiple tickets for a booking"""

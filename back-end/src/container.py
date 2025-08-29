@@ -13,7 +13,7 @@ from src.infrastructure.repositories.ticket_repository_impl import TicketReposit
 
 # Domain - Services
 from src.domain.services.booking_service import BookingService
-from src.domain.services.ticket_service_impl import TicketService
+from src.domain.services.ticket_service import TicketService
 
 # Application - Use Cases
 from src.application.use_cases.user_use_cases import UserUseCases

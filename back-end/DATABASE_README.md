@@ -42,6 +42,9 @@ docker-compose up -d
 - **capacity**: Maximum attendees (INTEGER, NOT NULL, CHECK: > 0)
 - **price**: Ticket price (DECIMAL(10,2), NOT NULL, CHECK: >= 0)
 - **status**: Event status (ENUM: 'active', 'cancelled', 'completed', DEFAULT: 'active')
+- **total_tickets_sold**: Computed field - total confirmed tickets sold (INTEGER, DEFAULT: 0, CHECK: >= 0)
+- **total_revenue**: Computed field - total revenue from confirmed bookings (DECIMAL(10,2), DEFAULT: 0, CHECK: >= 0)
+- **total_bookings**: Computed field - total number of confirmed bookings (INTEGER, DEFAULT: 0, CHECK: >= 0)
 - **created_at**: Timestamp with timezone (DEFAULT: CURRENT_TIMESTAMP)
 - **updated_at**: Timestamp with timezone (DEFAULT: CURRENT_TIMESTAMP)
 
@@ -75,6 +78,7 @@ docker-compose up -d
 - Event capacity must be positive
 - Event price must be non-negative
 - Event date must be in the future
+- Event computed fields (total_tickets_sold, total_revenue, total_bookings) must be non-negative
 - Booking quantity must be positive
 - Total amount must be non-negative
 
@@ -104,10 +108,14 @@ Strategic indexes are created for:
    - Prevents overbooking by checking available capacity before confirming bookings
    - Raises exceptions if booking would exceed event capacity
 
+4. **Event Statistics Updates**
+   - Automatically updates computed fields (total_tickets_sold, total_revenue, total_bookings) when bookings change
+   - Maintains real-time statistics for performance optimization
+
 #### Views
 
 1. **booking_summary**: Complete booking information with user and event details
-2. **event_availability**: Event capacity and availability statistics
+2. **event_availability**: Event capacity and availability statistics with computed fields (booked_tickets, available_tickets, occupancy_percentage, total_revenue, total_bookings)
 
 ## Migration Commands
 
@@ -169,7 +177,9 @@ SELECT
     capacity,
     booked_tickets,
     available_tickets,
-    occupancy_percentage
+    occupancy_percentage,
+    total_revenue,
+    total_bookings
 FROM event_availability 
 WHERE id = 1;
 ```
@@ -188,6 +198,23 @@ JOIN events e ON b.event_id = e.id
 JOIN users u ON b.user_id = u.id
 WHERE t.status = 'active'
 ORDER BY e.date_time;
+```
+
+### Get Event Revenue and Statistics
+```sql
+SELECT 
+    id,
+    title,
+    venue,
+    date_time,
+    capacity,
+    total_tickets_sold,
+    total_revenue,
+    total_bookings,
+    ROUND((total_tickets_sold::DECIMAL / capacity) * 100, 2) as occupancy_percentage
+FROM events 
+WHERE status = 'active'
+ORDER BY total_revenue DESC;
 ```
 
 ## Troubleshooting
