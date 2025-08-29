@@ -7,12 +7,15 @@ import { takeUntil } from 'rxjs/operators';
 import { Event } from '../../core/models/event.model';
 import { BookingRequest, BookingApiRequest } from '../../core/models/booking.model';
 import { User } from '../../core/models/user.model';
-import { EventService } from '../../core/services/event.service';
-import { BookingService } from '../../core/services/booking.service';
-import { AuthService } from '../../core/services/auth.service';
-import { TicketAvailabilityService, TicketAvailability } from '../../core/services/ticket-availability.service';
+import {
+  EventService,
+  BookingService,
+  AuthService,
+  TicketAvailabilityService,
+  TicketAvailability,
+  User as UserServiceUser
+} from '../../core/services';
 import { UserSelectorComponent } from '../../shared/components/user-selector/user-selector.component';
-import { User as UserServiceUser } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-event-detail',

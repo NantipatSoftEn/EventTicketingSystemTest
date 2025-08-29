@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { LayoutComponent } from './shared/components/layout/layout.component';
 import { DevModeToggleComponent } from './shared/components/dev-mode-toggle/dev-mode-toggle.component';
-import { User } from './core/services/user.service';
+import { User } from './core/services';
 
 @Component({
   selector: 'app-root',

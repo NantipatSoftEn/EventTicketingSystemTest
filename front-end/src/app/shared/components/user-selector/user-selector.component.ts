@@ -1,7 +1,7 @@
 import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UserService, User, ApiResponse } from '../../../core/services/user.service';
+import { UserService, User, ApiResponse } from '../../../core/services';
 
 @Component({
   selector: 'app-user-selector',

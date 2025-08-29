@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { AdminStateService, AdminDashboardStats } from '../../core/services/admin-state.service';
+import { AuthService, AdminStateService, AdminDashboardStats } from '../../core/services';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({

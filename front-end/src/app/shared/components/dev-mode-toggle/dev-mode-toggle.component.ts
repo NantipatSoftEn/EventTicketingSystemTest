@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DevModeService } from '../../../core/services/dev-mode.service';
+import { DevModeService } from '../../../core/services';
 import { Observable } from 'rxjs';
 
 @Component({

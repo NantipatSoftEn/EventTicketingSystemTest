@@ -5,8 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Event, EventFilters } from '../../core/models/event.model';
-import { EventService } from '../../core/services/event.service';
-import { TicketAvailabilityService } from '../../core/services/ticket-availability.service';
+import { EventService, TicketAvailabilityService } from '../../core/services';
 
 @Component({
   selector: 'app-event-list',

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject, BehaviorSubject, map, takeUntil } from 'rxjs';
 import { Event, EventManagement } from '../../../core/models/event.model';
-import { EventService } from '../../../core/services/event.service';
+import { EventService } from '../../../core/services';
 
 interface EventWithStats {
   id: number;

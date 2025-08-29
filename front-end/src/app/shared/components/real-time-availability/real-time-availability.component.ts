@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { TicketAvailabilityService } from '../../../core/services/ticket-availability.service';
+import { TicketAvailabilityService } from '../../../core/services';
 
 @Component({
   selector: 'app-real-time-availability',

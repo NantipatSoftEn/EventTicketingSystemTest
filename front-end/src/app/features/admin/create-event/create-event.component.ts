@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Event } from '../../../core/models/event.model';
-import { EventService } from '../../../core/services/event.service';
+import { EventService } from '../../../core/services';
 
 @Component({
   selector: 'app-create-event',

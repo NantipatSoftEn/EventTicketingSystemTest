@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Booking, BookingStatus, TicketStatus } from '../../core/models/booking.model';
 import { Event } from '../../core/models/event.model';
-import { BookingService } from '../../core/services/booking.service';
-import { EventService } from '../../core/services/event.service';
-import { AuthService } from '../../core/services/auth.service';
+import {
+  BookingService,
+  EventService,
+  AuthService,
+  User as UserServiceUser
+} from '../../core/services';
 import { UserSelectorComponent } from '../../shared/components/user-selector/user-selector.component';
-import { User as UserServiceUser } from '../../core/services/user.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
