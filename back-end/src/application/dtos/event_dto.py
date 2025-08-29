@@ -44,6 +44,20 @@ class EventResponseDTO:
 
 
 @dataclass
+class EventAvailabilityDTO:
+    """DTO for real-time event availability"""
+    event_id: int
+    total_capacity: int
+    booked_tickets: int
+    available_tickets: int
+    occupancy_percentage: float
+    is_sold_out: bool
+    is_almost_sold_out: bool
+    event_status: EventStatus
+    last_updated: Optional[datetime] = None
+
+
+@dataclass
 class EventManagementDTO:
     """DTO for event management view with all statistics"""
     id: int

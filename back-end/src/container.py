@@ -19,11 +19,13 @@ from src.domain.services.ticket_service_impl import TicketService
 from src.application.use_cases.user_use_cases import UserUseCases
 from src.application.use_cases.event_use_cases import EventUseCases
 from src.application.use_cases.booking_use_cases import BookingUseCases
+from src.application.use_cases.event_availability_use_cases import EventAvailabilityUseCases
 
 # Presentation - Controllers
 from src.presentation.controllers.user_controller import UserController
 from src.presentation.controllers.event_controller import EventController
 from src.presentation.controllers.booking_controller import BookingController
+from src.presentation.controllers.event_availability_controller import EventAvailabilityController
 
 
 class DependencyContainer:
@@ -54,11 +56,16 @@ class DependencyContainer:
             self.booking_service,
             self.ticket_service
         )
+        self.event_availability_use_cases = EventAvailabilityUseCases(
+            self.event_repository,
+            self.booking_repository
+        )
         
         # Initialize controllers
         self.user_controller = UserController(self.user_use_cases)
         self.event_controller = EventController(self.event_use_cases, self.user_use_cases)
         self.booking_controller = BookingController(self.booking_use_cases, self.user_use_cases)
+        self.event_availability_controller = EventAvailabilityController(self.event_availability_use_cases)
 
 
 # Global container instance

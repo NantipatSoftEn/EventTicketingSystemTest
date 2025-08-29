@@ -66,7 +66,34 @@
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
             </svg>
-            <span class="text-lg">{{ event.availableTickets }} of {{ event.totalTickets }} tickets available</span>
+            <div class="flex items-center space-x-2">
+              <!-- Real-time availability display -->
+              <span *ngIf="availability$ | async as availability; else staticAvailability"
+                    class="text-lg">
+                {{ availability.availableTickets }} of {{ availability.totalCapacity }} tickets available
+              </span>
+
+              <!-- Fallback to static data -->
+              <ng-template #staticAvailability>
+                <span class="text-lg">{{ event.availableTickets }} of {{ event.totalTickets }} tickets available</span>
+              </ng-template>
+
+              <!-- Real-time status indicator -->
+              <div *ngIf="availabilityStatus$ | async as status"
+                   [class]="'px-2 py-1 rounded-full text-xs font-medium ' + status.class">
+                {{ status.text }}
+              </div>
+
+              <!-- Polling indicator -->
+              <div *ngIf="isPollingAvailability$ | async"
+                   class="flex items-center text-xs text-blue-500">
+                <svg class="animate-spin -ml-1 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Live
+              </div>
+            </div>
           </div>
 
           <div class="flex items-center">
@@ -104,6 +131,17 @@
         <div *ngIf="!bookingSuccess" class="bg-gray-50 rounded-lg p-6">
           <h3 class="text-xl font-semibold text-gray-900 mb-4">Book Your Tickets</h3>
 
+          <!-- Sold Out Warning -->
+          <div *ngIf="(availabilityStatus$ | async)?.disabled"
+               class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>This event is sold out. No tickets are available.</span>
+            </div>
+          </div>
+
           <!-- User Selector -->
           <div class="mb-6">
             <app-user-selector
@@ -127,7 +165,8 @@
             {{ bookingError }}
           </div>
 
-          <form (ngSubmit)="onSubmitBooking()" #bookingFormRef="ngForm">
+          <form (ngSubmit)="onSubmitBooking()" #bookingFormRef="ngForm"
+                [class.opacity-50]="(availabilityStatus$ | async)?.disabled">
             <!-- Quantity Selector -->
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-2">Number of Tickets</label>
@@ -135,7 +174,7 @@
                 <button
                   type="button"
                   (click)="decreaseQuantity()"
-                  [disabled]="bookingForm.quantity <= 1"
+                  [disabled]="bookingForm.quantity <= 1 || (availabilityStatus$ | async)?.disabled"
                   class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md"
                 >
                   -
@@ -145,13 +184,14 @@
                   [value]="bookingForm.quantity"
                   (input)="updateQuantity($event)"
                   min="1"
-                  [max]="event.availableTickets"
-                  class="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  [max]="(availability$ | async)?.availableTickets || event.availableTickets"
+                  [disabled]="(availabilityStatus$ | async)?.disabled"
+                  class="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   (click)="increaseQuantity()"
-                  [disabled]="bookingForm.quantity >= event.availableTickets"
+                  [disabled]="bookingForm.quantity >= ((availability$ | async)?.availableTickets || event.availableTickets) || (availabilityStatus$ | async)?.disabled"
                   class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md"
                 >
                   +
@@ -204,7 +244,7 @@
             <!-- Submit Button -->
             <button
               type="submit"
-              [disabled]="!isFormValid() || isBooking || event.availableTickets === 0"
+              [disabled]="!isFormValid() || isBooking || (availabilityStatus$ | async)?.disabled"
               class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium text-lg transition-colors"
             >
               <span *ngIf="isBooking" class="flex items-center justify-center">
@@ -215,9 +255,9 @@
                 กำลังประมวลผล...
               </span>
               <span *ngIf="!isBooking">
-                <span *ngIf="event.availableTickets === 0">ขายหมดแล้ว</span>
-                <span *ngIf="event.availableTickets > 0 && !selectedTestUser">กรุณาเลือกผู้ใช้งาน</span>
-                <span *ngIf="event.availableTickets > 0 && selectedTestUser">จองเลย</span>
+                <span *ngIf="(availabilityStatus$ | async)?.disabled">{{ (availabilityStatus$ | async)?.text || 'ขายหมดแล้ว' }}</span>
+                <span *ngIf="!(availabilityStatus$ | async)?.disabled && !selectedTestUser">กรุณาเลือกผู้ใช้งาน</span>
+                <span *ngIf="!(availabilityStatus$ | async)?.disabled && selectedTestUser">จองเลย</span>
               </span>
             </button>
           </form>

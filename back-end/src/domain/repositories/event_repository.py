@@ -40,3 +40,8 @@ class EventRepository(ABC):
     async def get_active_events(self) -> List[Event]:
         """Get all active events"""
         pass
+    
+    @abstractmethod
+    async def get_all_active(self) -> List[Event]:
+        """Get all active events (alias for compatibility)"""
+        pass

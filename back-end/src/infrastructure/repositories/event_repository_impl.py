@@ -129,3 +129,7 @@ class EventRepositoryImpl(EventRepository):
     async def get_active_events(self) -> List[Event]:
         """Get all active events"""
         return await self.get_by_status(EventStatus.ACTIVE)
+    
+    async def get_all_active(self) -> List[Event]:
+        """Get all active events (alias for compatibility)"""
+        return await self.get_active_events()

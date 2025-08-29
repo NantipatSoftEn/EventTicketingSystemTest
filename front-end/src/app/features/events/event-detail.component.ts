@@ -1,13 +1,16 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, Observable } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Event } from '../../core/models/event.model';
 import { BookingRequest, BookingApiRequest } from '../../core/models/booking.model';
 import { User } from '../../core/models/user.model';
 import { EventService } from '../../core/services/event.service';
 import { BookingService } from '../../core/services/booking.service';
 import { AuthService } from '../../core/services/auth.service';
+import { TicketAvailabilityService, TicketAvailability } from '../../core/services/ticket-availability.service';
 import { UserSelectorComponent } from '../../shared/components/user-selector/user-selector.component';
 import { User as UserServiceUser } from '../../core/services/user.service';
 
@@ -17,13 +20,21 @@ import { User as UserServiceUser } from '../../core/services/user.service';
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css'
 })
-export class EventDetailComponent implements OnInit {
+export class EventDetailComponent implements OnInit, OnDestroy {
   @ViewChild(UserSelectorComponent) userSelector!: UserSelectorComponent;
+
+  private destroy$ = new Subject<void>();
+
   event: Event | null = null;
   isLoading = false;
   isBooking = false;
   bookingSuccess = false;
   bookingError: string | null = null;
+
+  // Real-time availability data
+  availability$: Observable<TicketAvailability | null>;
+  availabilityStatus$: Observable<{ text: string; class: string; disabled: boolean }>;
+  isPollingAvailability$: Observable<boolean>;
 
   bookingForm = {
     quantity: 1,
@@ -38,18 +49,60 @@ export class EventDetailComponent implements OnInit {
     private router: Router,
     private eventService: EventService,
     private bookingService: BookingService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    private availabilityService: TicketAvailabilityService
+  ) {
+    // Initialize observables
+    this.availability$ = new Observable();
+    this.availabilityStatus$ = new Observable();
+    this.isPollingAvailability$ = this.availabilityService.isPolling$;
+  }
 
   ngOnInit(): void {
     const eventId = this.route.snapshot.params['id'];
     if (eventId) {
       this.loadEvent(eventId);
+      this.setupAvailabilityTracking(parseInt(eventId));
     }
 
     // Initialize form with empty values - will be filled by user selector
     this.bookingForm.userName = '';
     this.bookingForm.userPhone = '';
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // Stop tracking this event when component is destroyed
+    if (this.event) {
+      this.availabilityService.stopTrackingEvent(this.event.id);
+    }
+  }
+
+  setupAvailabilityTracking(eventId: number): void {
+    // Start tracking availability for this event
+    this.availabilityService.trackEvents([eventId]);
+
+    // Set up observables for real-time updates
+    this.availability$ = this.availabilityService.getEventAvailability(eventId);
+    this.availabilityStatus$ = this.availabilityService.getAvailabilityStatus(eventId);
+
+    // Subscribe to availability changes to update local event data
+    this.availability$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(availability => {
+      if (availability && this.event) {
+        // Update local event data with real-time availability
+        this.event.availableTickets = availability.availableTickets;
+        this.event.totalTickets = availability.totalCapacity;
+
+        // Adjust quantity if it exceeds available tickets
+        if (this.bookingForm.quantity > availability.availableTickets) {
+          this.bookingForm.quantity = Math.max(1, availability.availableTickets);
+        }
+      }
+    });
   }
 
   onUserSelected(user: UserServiceUser | null): void {
@@ -78,7 +131,17 @@ export class EventDetailComponent implements OnInit {
   }
 
   increaseQuantity(): void {
-    if (this.event && this.bookingForm.quantity < this.event.availableTickets) {
+    // Use real-time availability if available, fallback to event data
+    let maxTickets = this.event?.availableTickets || 0;
+
+    // Get current availability synchronously
+    this.availability$.pipe(takeUntil(this.destroy$)).subscribe(availability => {
+      if (availability) {
+        maxTickets = availability.availableTickets;
+      }
+    }).unsubscribe();
+
+    if (this.bookingForm.quantity < maxTickets) {
       this.bookingForm.quantity++;
     }
   }
@@ -91,7 +154,18 @@ export class EventDetailComponent implements OnInit {
 
   updateQuantity(event: any): void {
     const value = parseInt(event.target.value);
-    if (value >= 1 && this.event && value <= this.event.availableTickets) {
+
+    // Use real-time availability if available, fallback to event data
+    let maxTickets = this.event?.availableTickets || 0;
+
+    // Get current availability synchronously
+    this.availability$.pipe(takeUntil(this.destroy$)).subscribe(availability => {
+      if (availability) {
+        maxTickets = availability.availableTickets;
+      }
+    }).unsubscribe();
+
+    if (value >= 1 && value <= maxTickets) {
       this.bookingForm.quantity = value;
     }
   }
@@ -118,8 +192,11 @@ export class EventDetailComponent implements OnInit {
 
     this.bookingService.createBookingWithApiFormat(bookingRequest).subscribe({
       next: (booking) => {
-        // Update available tickets
+        // Update available tickets in legacy service for compatibility
         this.eventService.reduceAvailableTickets(this.event!.id, this.bookingForm.quantity).subscribe();
+
+        // Force refresh real-time availability
+        this.availabilityService.refreshAvailability();
 
         this.isBooking = false;
         this.bookingSuccess = true;
@@ -133,6 +210,9 @@ export class EventDetailComponent implements OnInit {
         console.error('Booking failed:', error);
         this.bookingError = 'Failed to create booking. Please try again.';
         this.isBooking = false;
+
+        // Refresh availability even on error to check if tickets were actually booked
+        this.availabilityService.refreshAvailability();
       }
     });
   }

@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Event, EventFilters } from '../../core/models/event.model';
 import { EventService } from '../../core/services/event.service';
+import { TicketAvailabilityService } from '../../core/services/ticket-availability.service';
 
 @Component({
   selector: 'app-event-list',
@@ -11,7 +14,9 @@ import { EventService } from '../../core/services/event.service';
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.css'
 })
-export class EventListComponent implements OnInit {
+export class EventListComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   events: Event[] = [];
   filteredEvents: Event[] = [];
   isLoading = false;
@@ -27,10 +32,18 @@ export class EventListComponent implements OnInit {
   dateFromInput: string = '';
   dateToInput: string = '';
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private availabilityService: TicketAvailabilityService
+  ) {}
 
   ngOnInit(): void {
     this.loadEvents();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadEvents(): void {
@@ -40,6 +53,28 @@ export class EventListComponent implements OnInit {
         this.events = events;
         this.filteredEvents = events;
         this.isLoading = false;
+
+        // Start tracking availability for all events
+        const eventIds = events.map(event => event.id);
+        this.availabilityService.trackEvents(eventIds);
+
+        // Subscribe to availability updates
+        this.availabilityService.availability$.pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(availabilityMap => {
+          // Update events with real-time availability
+          this.events.forEach(event => {
+            const availability = availabilityMap[event.id];
+            if (availability) {
+              event.availableTickets = availability.availableTickets;
+              event.totalTickets = availability.totalCapacity;
+            }
+          });
+
+          // Re-apply filters to update filtered events
+          this.applyFilters();
+        });
+
         console.log('Events loaded:', events);
       },
       error: (error: any) => {
@@ -59,7 +94,7 @@ export class EventListComponent implements OnInit {
     if (this.filters.venue?.trim()) {
       activeFilters.venue = this.filters.venue.trim();
     }
-    
+
     // Convert string inputs to Date objects for filtering
     if (this.dateFromInput) {
       activeFilters.dateFrom = new Date(this.dateFromInput);

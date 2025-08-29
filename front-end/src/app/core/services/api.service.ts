@@ -196,4 +196,27 @@ export class ApiService {
       this.http.get<ApiResponse<EventManagement[]>>(`${this.baseUrl}/events/management/view`)
     );
   }
+
+  // Ticket Availability API methods
+  getEventAvailability(eventId: number): Observable<any> {
+    return this.handleResponse(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/availability/${eventId}`)
+    );
+  }
+
+  getMultipleEventsAvailability(eventIds: number[]): Observable<any> {
+    let params = new HttpParams();
+    eventIds.forEach(id => {
+      params = params.append('event_ids', id.toString());
+    });
+    return this.handleResponse(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/availability`, { params })
+    );
+  }
+
+  getAllActiveEventsAvailability(): Observable<any> {
+    return this.handleResponse(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/availability/all/active`)
+    );
+  }
 }
