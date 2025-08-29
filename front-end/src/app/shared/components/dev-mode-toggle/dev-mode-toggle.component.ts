@@ -1,32 +1,34 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DevModeService } from '../../../core/services';
-import { Observable } from 'rxjs';
+import { Component } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { DevModeService } from '../../../core/services'
+import { Observable } from 'rxjs'
 
 @Component({
-  selector: 'app-dev-mode-toggle',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './dev-mode-toggle.component.html',
-  styles: [`
-    :host {
-      display: block;
-    }
-  `]
+    selector: 'app-dev-mode-toggle',
+    standalone: true,
+    imports: [CommonModule],
+    templateUrl: './dev-mode-toggle.component.html',
+    styles: [
+        `
+            :host {
+                display: block;
+            }
+        `,
+    ],
 })
 export class DevModeToggleComponent {
-  isDevMode$: Observable<boolean>;
+    isDevMode$: Observable<boolean>
 
-  constructor(private devModeService: DevModeService) {
-    this.isDevMode$ = this.devModeService.isDevMode$;
-  }
+    constructor(private devModeService: DevModeService) {
+        this.isDevMode$ = this.devModeService.isDevMode$
+    }
 
-  get isDevMode(): boolean {
-    return this.devModeService.isDevMode;
-  }
+    get isDevMode(): boolean {
+        return this.devModeService.isDevMode
+    }
 
-  toggleDevMode(): void {
-    this.devModeService.toggleDevMode();
-    window.location.reload();
-  }
+    toggleDevMode(): void {
+        this.devModeService.toggleDevMode()
+        window.location.reload()
+    }
 }

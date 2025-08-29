@@ -1,290 +1,606 @@
 <div class="container mx-auto px-4 py-8">
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="text-center py-12">
-    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    <p class="mt-4 text-gray-600">Loading event details...</p>
-  </div>
-
-  <!-- Event Not Found -->
-  <div *ngIf="!isLoading && !event" class="text-center py-12">
-    <div class="text-gray-400 mb-4">
-      <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.657 2.172M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="py-12 text-center">
+        <div
+            class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"
+        ></div>
+        <p class="mt-4 text-gray-600">Loading event details...</p>
     </div>
-    <h2 class="text-2xl font-semibold text-gray-900 mb-2">Event not found</h2>
-    <p class="text-gray-600 mb-4">The event you're looking for doesn't exist or has been removed.</p>
-    <button (click)="goBack()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
-      Back to Events
-    </button>
-  </div>
 
-  <!-- Event Details -->
-  <div *ngIf="!isLoading && event" class="max-w-6xl mx-auto">
-    <!-- Back Button -->
-    <button (click)="goBack()" class="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-colors">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-      </svg>
-      Back to Events
-    </button>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Event Image and Basic Info -->
-      <div>
-        <div class="relative">
-          <img
-            [src]="event.image"
-            [alt]="event.title"
-            class="w-full h-64 lg:h-96 object-cover rounded-lg shadow-lg"
-          />
-          <div class="absolute top-4 right-4">
-            <span [class]="getAvailabilityStatus().class + ' px-3 py-1 rounded-full text-sm font-medium'">
-              {{ getAvailabilityStatus().text }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Event Information -->
-        <div class="mt-6 space-y-4">
-          <div class="flex items-center text-gray-600">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            <span class="text-lg">{{ event.venue }}</span>
-          </div>
-
-          <div class="flex items-center text-gray-600">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            <span class="text-lg">{{ formatDate(event.date) }} at {{ event.time }}</span>
-          </div>
-
-          <div class="flex items-center text-gray-600">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
-            </svg>
-            <div class="flex items-center space-x-2">
-              <!-- Real-time availability display -->
-              <span *ngIf="availability$ | async as availability; else staticAvailability"
-                    class="text-lg">
-                {{ availability.availableTickets }} of {{ availability.totalCapacity }} tickets available
-              </span>
-
-              <!-- Fallback to static data -->
-              <ng-template #staticAvailability>
-                <span class="text-lg">{{ event.availableTickets }} of {{ event.totalTickets }} tickets available</span>
-              </ng-template>
-
-              <!-- Real-time status indicator -->
-              <div *ngIf="availabilityStatus$ | async as status"
-                   [class]="'px-2 py-1 rounded-full text-xs font-medium ' + status.class">
-                {{ status.text }}
-              </div>
-
-              <!-- Polling indicator -->
-              <div *ngIf="isPollingAvailability$ | async"
-                   class="flex items-center text-xs text-blue-500">
-                <svg class="animate-spin -ml-1 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Live
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center">
-            <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-            </svg>
-            <span class="text-2xl font-bold text-blue-600">{{ formatPrice(event.price) }}</span>
-            <span class="text-gray-600 ml-2">per ticket</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Event Details and Booking Form -->
-      <div>
-        <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">{{ event.title }}</h1>
-
-        <div class="prose prose-lg max-w-none mb-8">
-          <p class="text-gray-600 leading-relaxed">{{ event.description }}</p>
-        </div>
-
-        <!-- Booking Success Message -->
-        <div *ngIf="bookingSuccess" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-          <div class="flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <div>
-              <h4 class="font-semibold">Booking Successful!</h4>
-              <p class="text-sm">Your tickets have been booked. Redirecting to your bookings...</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Booking Form -->
-        <div *ngIf="!bookingSuccess" class="bg-gray-50 rounded-lg p-6">
-          <h3 class="text-xl font-semibold text-gray-900 mb-4">Book Your Tickets</h3>
-
-          <!-- Sold Out Warning -->
-          <div *ngIf="(availabilityStatus$ | async)?.disabled"
-               class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span>This event is sold out. No tickets are available.</span>
-            </div>
-          </div>
-
-          <!-- User Selector -->
-          <div class="mb-6">
-            <app-user-selector
-              (userSelected)="onUserSelected($event)"
-              class="block">
-            </app-user-selector>
-          </div>
-
-          <!-- User Selection Warning -->
-          <div *ngIf="!selectedTestUser" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-              <span>กรุณาเลือกผู้ใช้งานด้านบนก่อนทำการจอง</span>
-            </div>
-          </div>
-
-          <!-- Error Message -->
-          <div *ngIf="bookingError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {{ bookingError }}
-          </div>
-
-          <form (ngSubmit)="onSubmitBooking()" #bookingFormRef="ngForm"
-                [class.opacity-50]="(availabilityStatus$ | async)?.disabled">
-            <!-- Quantity Selector -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Number of Tickets
-                <span class="text-sm text-gray-500">(Max: {{ getMaxSelectableTickets() }})</span>
-              </label>
-              <div class="flex items-center space-x-3">
-                <button
-                  type="button"
-                  (click)="decreaseQuantity()"
-                  [disabled]="bookingForm.quantity <= 1 || (availabilityStatus$ | async)?.disabled"
-                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md transition-colors"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  [value]="bookingForm.quantity"
-                  (input)="updateQuantity($event)"
-                  (blur)="updateQuantity($event)"
-                  (keydown)="onQuantityKeydown($event)"
-                  min="1"
-                  [max]="getMaxSelectableTickets()"
-                  [disabled]="(availabilityStatus$ | async)?.disabled || getMaxSelectableTickets() === 0"
-                  class="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-                <button
-                  type="button"
-                  (click)="increaseQuantity()"
-                  [disabled]="bookingForm.quantity >= getMaxSelectableTickets() || (availabilityStatus$ | async)?.disabled"
-                  class="bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-2 rounded-md transition-colors"
-                >
-                  +
-                </button>
-              </div>
-
-              <!-- Availability warning -->
-              <div *ngIf="getMaxSelectableTickets() === 0" class="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
-                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                No tickets available for booking
-              </div>
-
-              <div *ngIf="getMaxSelectableTickets() > 0 && getMaxSelectableTickets() <= 5" class="mt-2 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-md">
-                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                Only {{ getMaxSelectableTickets() }} ticket(s) remaining!
-              </div>
-            </div>
-
-            <!-- Customer Information -->
-            <div class="space-y-4 mb-4">
-              <div>
-                <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่อผู้จอง {{ selectedTestUser ? '(จากผู้ใช้ที่เลือก)' : '(กรุณาเลือกผู้ใช้งาน)' }}
-                </label>
-                <input
-                  id="userName"
-                  type="text"
-                  [(ngModel)]="bookingForm.userName"
-                  name="userName"
-                  readonly
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-                  [placeholder]="selectedTestUser ? selectedTestUser.name : 'กรุณาเลือกผู้ใช้งานด้านบน'"
-                />
-              </div>
-
-              <div>
-                <label for="userPhone" class="block text-sm font-medium text-gray-700 mb-1">
-                  เบอร์โทรศัพท์ {{ selectedTestUser ? '(จากผู้ใช้ที่เลือก)' : '(กรุณาเลือกผู้ใช้งาน)' }}
-                </label>
-                <input
-                  id="userPhone"
-                  type="tel"
-                  [(ngModel)]="bookingForm.userPhone"
-                  name="userPhone"
-                  readonly
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-                  [placeholder]="selectedTestUser ? selectedTestUser.phone : 'กรุณาเลือกผู้ใช้งานด้านบน'"
-                />
-              </div>
-            </div>
-
-            <!-- Total Price -->
-            <div class="bg-white rounded-lg p-4 mb-6 border">
-              <div class="flex justify-between items-center">
-                <span class="text-lg font-medium text-gray-900">Total Amount:</span>
-                <span class="text-2xl font-bold text-blue-600">{{ formatPrice(getTotalPrice()) }}</span>
-              </div>
-              <p class="text-sm text-gray-600 mt-1">{{ bookingForm.quantity }} ticket(s) × {{ formatPrice(event.price) }}</p>
-            </div>
-
-            <!-- Submit Button -->
-            <button
-              type="submit"
-              [disabled]="!isFormValid() || isBooking || (availabilityStatus$ | async)?.disabled || getMaxSelectableTickets() === 0"
-              class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium text-lg transition-colors"
+    <!-- Event Not Found -->
+    <div *ngIf="!isLoading && !event" class="py-12 text-center">
+        <div class="mb-4 text-gray-400">
+            <svg
+                class="mx-auto h-16 w-16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
             >
-              <span *ngIf="isBooking" class="flex items-center justify-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                กำลังประมวลผล...
-              </span>
-              <span *ngIf="!isBooking">
-                <span *ngIf="getMaxSelectableTickets() === 0">ตั๋วขายหมดแล้ว</span>
-                <span *ngIf="getMaxSelectableTickets() > 0 && (availabilityStatus$ | async)?.disabled">{{ (availabilityStatus$ | async)?.text || 'ไม่สามารถจองได้' }}</span>
-                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && !selectedTestUser">กรุณาเลือกผู้ใช้งาน</span>
-                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && selectedTestUser && !isFormValid()">กรุณากรอกข้อมูลให้ครบถ้วน</span>
-                <span *ngIf="getMaxSelectableTickets() > 0 && !(availabilityStatus$ | async)?.disabled && selectedTestUser && isFormValid()">จองตั๋ว {{ bookingForm.quantity }} ใบ ({{ formatPrice(getTotalPrice()) }})</span>
-              </span>
-            </button>
-          </form>
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.657 2.172M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+            </svg>
         </div>
-      </div>
+        <h2 class="mb-2 text-2xl font-semibold text-gray-900">
+            Event not found
+        </h2>
+        <p class="mb-4 text-gray-600">
+            The event you're looking for doesn't exist or has been removed.
+        </p>
+        <button
+            (click)="goBack()"
+            class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+            Back to Events
+        </button>
     </div>
-  </div>
+
+    <!-- Event Details -->
+    <div *ngIf="!isLoading && event" class="mx-auto max-w-6xl">
+        <!-- Back Button -->
+        <button
+            (click)="goBack()"
+            class="mb-6 flex items-center text-blue-600 transition-colors hover:text-blue-800"
+        >
+            <svg
+                class="mr-2 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+            </svg>
+            Back to Events
+        </button>
+
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <!-- Event Image and Basic Info -->
+            <div>
+                <div class="relative">
+                    <img
+                        [src]="event.image"
+                        [alt]="event.title"
+                        class="h-64 w-full rounded-lg object-cover shadow-lg lg:h-96"
+                    />
+                    <div class="absolute top-4 right-4">
+                        <span
+                            [class]="
+                                getAvailabilityStatus().class +
+                                ' rounded-full px-3 py-1 text-sm font-medium'
+                            "
+                        >
+                            {{ getAvailabilityStatus().text }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Event Information -->
+                <div class="mt-6 space-y-4">
+                    <div class="flex items-center text-gray-600">
+                        <svg
+                            class="mr-3 h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            ></path>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            ></path>
+                        </svg>
+                        <span class="text-lg">{{ event.venue }}</span>
+                    </div>
+
+                    <div class="flex items-center text-gray-600">
+                        <svg
+                            class="mr-3 h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            ></path>
+                        </svg>
+                        <span class="text-lg"
+                            >{{ formatDate(event.date) }} at
+                            {{ event.time }}</span
+                        >
+                    </div>
+
+                    <div class="flex items-center text-gray-600">
+                        <svg
+                            class="mr-3 h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                            ></path>
+                        </svg>
+                        <div class="flex items-center space-x-2">
+                            <!-- Real-time availability display -->
+                            <span
+                                *ngIf="
+                                    availability$ | async as availability;
+                                    else staticAvailability
+                                "
+                                class="text-lg"
+                            >
+                                {{ availability.availableTickets }} of
+                                {{ availability.totalCapacity }} tickets
+                                available
+                            </span>
+
+                            <!-- Fallback to static data -->
+                            <ng-template #staticAvailability>
+                                <span class="text-lg"
+                                    >{{ event.availableTickets }} of
+                                    {{ event.totalTickets }} tickets
+                                    available</span
+                                >
+                            </ng-template>
+
+                            <!-- Real-time status indicator -->
+                            <div
+                                *ngIf="availabilityStatus$ | async as status"
+                                [class]="
+                                    'rounded-full px-2 py-1 text-xs font-medium ' +
+                                    status.class
+                                "
+                            >
+                                {{ status.text }}
+                            </div>
+
+                            <!-- Polling indicator -->
+                            <div
+                                *ngIf="isPollingAvailability$ | async"
+                                class="flex items-center text-xs text-blue-500"
+                            >
+                                <svg
+                                    class="mr-1 -ml-1 h-3 w-3 animate-spin"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Live
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <svg
+                            class="mr-3 h-5 w-5 text-gray-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                            ></path>
+                        </svg>
+                        <span class="text-2xl font-bold text-blue-600">{{
+                            formatPrice(event.price)
+                        }}</span>
+                        <span class="ml-2 text-gray-600">per ticket</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Details and Booking Form -->
+            <div>
+                <h1 class="mb-6 text-3xl font-bold text-gray-900 lg:text-4xl">
+                    {{ event.title }}
+                </h1>
+
+                <div class="prose prose-lg mb-8 max-w-none">
+                    <p class="leading-relaxed text-gray-600">
+                        {{ event.description }}
+                    </p>
+                </div>
+
+                <!-- Booking Success Message -->
+                <div
+                    *ngIf="bookingSuccess"
+                    class="mb-6 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
+                >
+                    <div class="flex items-center">
+                        <svg
+                            class="mr-2 h-6 w-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
+                        <div>
+                            <h4 class="font-semibold">Booking Successful!</h4>
+                            <p class="text-sm">
+                                Your tickets have been booked. Redirecting to
+                                your bookings...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <div *ngIf="!bookingSuccess" class="rounded-lg bg-gray-50 p-6">
+                    <h3 class="mb-4 text-xl font-semibold text-gray-900">
+                        Book Your Tickets
+                    </h3>
+
+                    <!-- Sold Out Warning -->
+                    <div
+                        *ngIf="(availabilityStatus$ | async)?.disabled"
+                        class="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+                    >
+                        <div class="flex items-center">
+                            <svg
+                                class="mr-2 h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                            <span
+                                >This event is sold out. No tickets are
+                                available.</span
+                            >
+                        </div>
+                    </div>
+
+                    <!-- User Selector -->
+                    <div class="mb-6">
+                        <app-user-selector
+                            (userSelected)="onUserSelected($event)"
+                            class="block"
+                        >
+                        </app-user-selector>
+                    </div>
+
+                    <!-- User Selection Warning -->
+                    <div
+                        *ngIf="!selectedTestUser"
+                        class="mb-4 rounded border border-yellow-400 bg-yellow-100 px-4 py-3 text-yellow-700"
+                    >
+                        <div class="flex items-center">
+                            <svg
+                                class="mr-2 h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                ></path>
+                            </svg>
+                            <span>กรุณาเลือกผู้ใช้งานด้านบนก่อนทำการจอง</span>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div
+                        *ngIf="bookingError"
+                        class="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+                    >
+                        {{ bookingError }}
+                    </div>
+
+                    <form
+                        (ngSubmit)="onSubmitBooking()"
+                        #bookingFormRef="ngForm"
+                        [class.opacity-50]="
+                            (availabilityStatus$ | async)?.disabled
+                        "
+                    >
+                        <!-- Quantity Selector -->
+                        <div class="mb-4">
+                            <label
+                                class="mb-2 block text-sm font-medium text-gray-700"
+                            >
+                                Number of Tickets
+                                <span class="text-sm text-gray-500"
+                                    >(Max:
+                                    {{ getMaxSelectableTickets() }})</span
+                                >
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <button
+                                    type="button"
+                                    (click)="decreaseQuantity()"
+                                    [disabled]="
+                                        bookingForm.quantity <= 1 ||
+                                        (availabilityStatus$ | async)?.disabled
+                                    "
+                                    class="rounded-md bg-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    -
+                                </button>
+                                <input
+                                    type="number"
+                                    [value]="bookingForm.quantity"
+                                    (input)="updateQuantity($event)"
+                                    (blur)="updateQuantity($event)"
+                                    (keydown)="onQuantityKeydown($event)"
+                                    min="1"
+                                    [max]="getMaxSelectableTickets()"
+                                    [disabled]="
+                                        (availabilityStatus$ | async)
+                                            ?.disabled ||
+                                        getMaxSelectableTickets() === 0
+                                    "
+                                    class="w-20 rounded-md border border-gray-300 px-3 py-2 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+                                />
+                                <button
+                                    type="button"
+                                    (click)="increaseQuantity()"
+                                    [disabled]="
+                                        bookingForm.quantity >=
+                                            getMaxSelectableTickets() ||
+                                        (availabilityStatus$ | async)?.disabled
+                                    "
+                                    class="rounded-md bg-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    +
+                                </button>
+                            </div>
+
+                            <!-- Availability warning -->
+                            <div
+                                *ngIf="getMaxSelectableTickets() === 0"
+                                class="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600"
+                            >
+                                <svg
+                                    class="mr-1 inline h-4 w-4"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd"
+                                    ></path>
+                                </svg>
+                                No tickets available for booking
+                            </div>
+
+                            <div
+                                *ngIf="
+                                    getMaxSelectableTickets() > 0 &&
+                                    getMaxSelectableTickets() <= 5
+                                "
+                                class="mt-2 rounded-md bg-orange-50 px-3 py-2 text-sm text-orange-600"
+                            >
+                                <svg
+                                    class="mr-1 inline h-4 w-4"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd"
+                                    ></path>
+                                </svg>
+                                Only {{ getMaxSelectableTickets() }} ticket(s)
+                                remaining!
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="mb-4 space-y-4">
+                            <div>
+                                <label
+                                    for="userName"
+                                    class="mb-1 block text-sm font-medium text-gray-700"
+                                >
+                                    ชื่อผู้จอง
+                                    {{
+                                        selectedTestUser
+                                            ? '(จากผู้ใช้ที่เลือก)'
+                                            : '(กรุณาเลือกผู้ใช้งาน)'
+                                    }}
+                                </label>
+                                <input
+                                    id="userName"
+                                    type="text"
+                                    [(ngModel)]="bookingForm.userName"
+                                    name="userName"
+                                    readonly
+                                    class="w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                                    [placeholder]="
+                                        selectedTestUser
+                                            ? selectedTestUser.name
+                                            : 'กรุณาเลือกผู้ใช้งานด้านบน'
+                                    "
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="userPhone"
+                                    class="mb-1 block text-sm font-medium text-gray-700"
+                                >
+                                    เบอร์โทรศัพท์
+                                    {{
+                                        selectedTestUser
+                                            ? '(จากผู้ใช้ที่เลือก)'
+                                            : '(กรุณาเลือกผู้ใช้งาน)'
+                                    }}
+                                </label>
+                                <input
+                                    id="userPhone"
+                                    type="tel"
+                                    [(ngModel)]="bookingForm.userPhone"
+                                    name="userPhone"
+                                    readonly
+                                    class="w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600"
+                                    [placeholder]="
+                                        selectedTestUser
+                                            ? selectedTestUser.phone
+                                            : 'กรุณาเลือกผู้ใช้งานด้านบน'
+                                    "
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Total Price -->
+                        <div class="mb-6 rounded-lg border bg-white p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-medium text-gray-900"
+                                    >Total Amount:</span
+                                >
+                                <span
+                                    class="text-2xl font-bold text-blue-600"
+                                    >{{ formatPrice(getTotalPrice()) }}</span
+                                >
+                            </div>
+                            <p class="mt-1 text-sm text-gray-600">
+                                {{ bookingForm.quantity }} ticket(s) ×
+                                {{ formatPrice(event.price) }}
+                            </p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button
+                            type="submit"
+                            [disabled]="
+                                !isFormValid() ||
+                                isBooking ||
+                                (availabilityStatus$ | async)?.disabled ||
+                                getMaxSelectableTickets() === 0
+                            "
+                            class="w-full rounded-md bg-blue-600 px-4 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                        >
+                            <span
+                                *ngIf="isBooking"
+                                class="flex items-center justify-center"
+                            >
+                                <svg
+                                    class="mr-3 -ml-1 h-5 w-5 animate-spin text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                กำลังประมวลผล...
+                            </span>
+                            <span *ngIf="!isBooking">
+                                <span *ngIf="getMaxSelectableTickets() === 0"
+                                    >ตั๋วขายหมดแล้ว</span
+                                >
+                                <span
+                                    *ngIf="
+                                        getMaxSelectableTickets() > 0 &&
+                                        (availabilityStatus$ | async)?.disabled
+                                    "
+                                    >{{
+                                        (availabilityStatus$ | async)?.text ||
+                                            'ไม่สามารถจองได้'
+                                    }}</span
+                                >
+                                <span
+                                    *ngIf="
+                                        getMaxSelectableTickets() > 0 &&
+                                        !(availabilityStatus$ | async)
+                                            ?.disabled &&
+                                        !selectedTestUser
+                                    "
+                                    >กรุณาเลือกผู้ใช้งาน</span
+                                >
+                                <span
+                                    *ngIf="
+                                        getMaxSelectableTickets() > 0 &&
+                                        !(availabilityStatus$ | async)
+                                            ?.disabled &&
+                                        selectedTestUser &&
+                                        !isFormValid()
+                                    "
+                                    >กรุณากรอกข้อมูลให้ครบถ้วน</span
+                                >
+                                <span
+                                    *ngIf="
+                                        getMaxSelectableTickets() > 0 &&
+                                        !(availabilityStatus$ | async)
+                                            ?.disabled &&
+                                        selectedTestUser &&
+                                        isFormValid()
+                                    "
+                                    >จองตั๋ว {{ bookingForm.quantity }} ใบ ({{
+                                        formatPrice(getTotalPrice())
+                                    }})</span
+                                >
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

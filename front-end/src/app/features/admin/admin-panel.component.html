@@ -1,49 +1,81 @@
 <div class="container mx-auto px-4 py-8">
-  <!-- Access Check -->
-  <div *ngIf="!isAdmin()" class="text-center py-12">
-    <div class="text-red-400 mb-4">
-      <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-      </svg>
-    </div>
-    <h2 class="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-    <p class="text-gray-600 mb-4">You need administrator privileges to access this page.</p>
-    <a routerLink="/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
-      Go Home
-    </a>
-  </div>
-
-  <!-- Admin Panel -->
-  <div *ngIf="isAdmin()">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-      <p class="text-gray-600">Manage events and view booking statistics</p>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="mb-8">
-      <nav class="flex space-x-8">
-        <a routerLink="/admin" routerLinkActive="border-blue-500 text-blue-600" [routerLinkActiveOptions]="{exact: true}" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">
-          Dashboard
+    <!-- Access Check -->
+    <div *ngIf="!isAdmin()" class="py-12 text-center">
+        <div class="mb-4 text-red-400">
+            <svg
+                class="mx-auto h-16 w-16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+            </svg>
+        </div>
+        <h2 class="mb-2 text-2xl font-semibold text-gray-900">Access Denied</h2>
+        <p class="mb-4 text-gray-600">
+            You need administrator privileges to access this page.
+        </p>
+        <a
+            routerLink="/"
+            class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+            Go Home
         </a>
-        <a routerLink="/admin/create-event" routerLinkActive="border-blue-500 text-blue-600" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">
-          Create Event
-        </a>
-        <a routerLink="/admin/manage-events" routerLinkActive="border-blue-500 text-blue-600" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">
-          Manage Events
-        </a>
-      </nav>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="stats.isLoading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      <p class="mt-4 text-gray-600">Loading dashboard...</p>
-    </div>
+    <!-- Admin Panel -->
+    <div *ngIf="isAdmin()">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="mb-2 text-3xl font-bold text-gray-900">Admin Panel</h1>
+            <p class="text-gray-600">
+                Manage events and view booking statistics
+            </p>
+        </div>
 
-    <!-- Dashboard Stats -->
-    <!-- <div *ngIf="!stats.isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Navigation Tabs -->
+        <div class="mb-8">
+            <nav class="flex space-x-8">
+                <a
+                    routerLink="/admin"
+                    routerLinkActive="border-blue-500 text-blue-600"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="border-b-2 border-transparent px-1 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+                >
+                    Dashboard
+                </a>
+                <a
+                    routerLink="/admin/create-event"
+                    routerLinkActive="border-blue-500 text-blue-600"
+                    class="border-b-2 border-transparent px-1 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+                >
+                    Create Event
+                </a>
+                <a
+                    routerLink="/admin/manage-events"
+                    routerLinkActive="border-blue-500 text-blue-600"
+                    class="border-b-2 border-transparent px-1 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+                >
+                    Manage Events
+                </a>
+            </nav>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="stats.isLoading" class="py-12 text-center">
+            <div
+                class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"
+            ></div>
+            <p class="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <!-- <div *ngIf="!stats.isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -107,43 +139,102 @@
       </div>
     </div> -->
 
-    <div *ngIf="!stats.isLoading" class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a routerLink="/admin/create-event" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-          <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-          <div>
-            <h3 class="font-medium text-gray-900">Create New Event</h3>
-            <p class="text-sm text-gray-600">Add a new event to the platform</p>
-          </div>
-        </a>
+        <div
+            *ngIf="!stats.isLoading"
+            class="mb-8 rounded-lg bg-white p-6 shadow-md"
+        >
+            <h2 class="mb-4 text-lg font-semibold text-gray-900">
+                Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <a
+                    routerLink="/admin/create-event"
+                    class="flex items-center rounded-lg bg-blue-50 p-4 transition-colors hover:bg-blue-100"
+                >
+                    <svg
+                        class="mr-3 h-8 w-8 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        ></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-medium text-gray-900">
+                            Create New Event
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            Add a new event to the platform
+                        </p>
+                    </div>
+                </a>
 
-        <a routerLink="/admin/manage-events" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-          <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-          </svg>
-          <div>
-            <h3 class="font-medium text-gray-900">Manage Events</h3>
-            <p class="text-sm text-gray-600">View and edit existing events</p>
-          </div>
-        </a>
+                <a
+                    routerLink="/admin/manage-events"
+                    class="flex items-center rounded-lg bg-green-50 p-4 transition-colors hover:bg-green-100"
+                >
+                    <svg
+                        class="mr-3 h-8 w-8 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                        ></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-medium text-gray-900">Manage Events</h3>
+                        <p class="text-sm text-gray-600">
+                            View and edit existing events
+                        </p>
+                    </div>
+                </a>
 
-        <a routerLink="/events" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-          <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-          </svg>
-          <div>
-            <h3 class="font-medium text-gray-900">View Public Site</h3>
-            <p class="text-sm text-gray-600">See how events appear to users</p>
-          </div>
-        </a>
-      </div>
+                <a
+                    routerLink="/events"
+                    class="flex items-center rounded-lg bg-purple-50 p-4 transition-colors hover:bg-purple-100"
+                >
+                    <svg
+                        class="mr-3 h-8 w-8 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        ></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-medium text-gray-900">
+                            View Public Site
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            See how events appear to users
+                        </p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Router Outlet for nested routes -->
+        <router-outlet></router-outlet>
     </div>
-
-    <!-- Router Outlet for nested routes -->
-    <router-outlet></router-outlet>
-  </div>
 </div>
