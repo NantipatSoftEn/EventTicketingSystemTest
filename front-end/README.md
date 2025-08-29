@@ -178,59 +178,6 @@ export const environment = {
 The frontend connects to the backend API at `http://localhost:8000/api/v1`.
 All API calls are managed through the `ApiService` with proper error handling and response transformation.
 
-### TailwindCSS Setup
-
-```javascript
-// tailwind.config.js
-module.exports = {
-  content: ["./src/**/*.{html,ts}"],
-  theme: {
-    extend: {
-      colors: {
-        primary: {...},
-        secondary: {...}
-      }
-    }
-  },
-  plugins: []
-}
-```
-
-## 🎨 Styling & Design
-
-### TailwindCSS Integration
-
-- **Utility-first CSS**: Modern, maintainable styling approach
-- **Responsive Design**: Mobile-first responsive layouts
-- **Custom Components**: Reusable styled components
-- **Dark Mode Ready**: Prepared for dark mode implementation
-
-### Design System
-
-- **Consistent Typography**: Hierarchical text styles
-- **Color Palette**: Primary, secondary, and semantic colors
-- **Spacing System**: Consistent margins and padding
-- **Component Library**: Reusable UI components
-
-## 🔄 State Management
-
-### Service-Based Architecture
-
-- **Reactive Services**: RxJS-based state management
-- **BehaviorSubjects**: Shared state across components
-- **Caching Strategy**: Intelligent data caching and invalidation
-- **Error Handling**: Comprehensive error states and user feedback
-
-### Data Flow
-
-```typescript
-// Example: Event state management
-EventService
-├── getEvents() → Cache → API → Components
-├── getEvent(id) → Cache → API → Event Detail
-├── bookEvent() → API → Refresh Cache → Update UI
-└── realTimeUpdates() → WebSocket → Live Updates
-```
 
 ## 🚀 Features Overview
 
@@ -251,12 +198,6 @@ EventService
 - ✅ **Error Handling**: User-friendly error messages and recovery
 - ✅ **Form Validation**: Client-side validation with clear feedback
 
-### Performance
-
-- ✅ **Lazy Loading**: Route-based code splitting
-- ✅ **Caching Strategy**: Intelligent data caching
-- ✅ **Optimized Builds**: Production-ready bundle optimization
-- ✅ **SSR Support**: Server-side rendering for SEO and performance
 
 ## 🔧 Development Mode
 
@@ -277,24 +218,6 @@ toggleDevMode(): void {
 - **Dev Mode ON**: Uses local mock data for rapid development
 - **Dev Mode OFF**: Connects to real backend API
 - **Seamless Switching**: No code changes required
-
-## 🧪 Testing
-
-### Unit Testing
-
-```bash
-ng test                  # Run all unit tests
-ng test --watch         # Run tests in watch mode
-ng test --code-coverage # Generate coverage report
-```
-
-### E2E Testing Setup
-
-```bash
-# Install E2E testing framework (example with Cypress)
-ng add @cypress/schematic
-ng e2e                  # Run E2E tests
-```
 
 ## 📱 Responsive Design
 
@@ -355,11 +278,36 @@ The frontend integrates with the FastAPI backend:
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 // Available endpoints:
-GET    /events              # List all events
-GET    /events/{id}         # Get event details
-POST   /bookings           # Create booking
-GET    /bookings/user/{id} # Get user bookings
-POST   /events             # Create event (admin)
+// Users
+GET    /users                      # List all users
+POST   /users                      # Create user
+GET    /users/{id}                 # Get user by ID
+
+// Events
+GET    /events                     # List all events
+GET    /events/{id}                # Get event details
+POST   /events                     # Create event (admin)
+PUT    /events/{id}                # Update event (admin)
+PATCH  /events/{id}                # Partially update event (admin)
+DELETE /events/{id}                # Delete event (admin)
+GET    /events/management/view     # Get events with statistics
+
+// Bookings
+POST   /bookings                   # Create booking
+GET    /bookings/{id}              # Get booking by ID
+GET    /bookings/user/{id}         # Get user bookings
+GET    /bookings/event/{id}        # Get event bookings (admin)
+GET    /bookings/event/{id}/stats  # Get booking statistics
+PUT    /bookings/{id}/status       # Update booking status (admin)
+
+// Event Availability
+GET    /availability/{id}          # Get event availability
+GET    /availability               # Get multiple events availability
+GET    /availability/all/active    # Get all active events availability
+
+// System
+GET    /api                        # Get API version information
+GET    /api/v1/architecture         # Get architecture information
 ```
 
 ### Error Handling
@@ -428,10 +376,246 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-## 📋 Browser Support
 
-- **Chrome**: Latest 2 versions
-- **Firefox**: Latest 2 versions
-- **Safari**: Latest 2 versions
-- **Edge**: Latest 2 versions
-- **Mobile**: iOS Safari, Chrome Mobile
+# Frontend Architecture Diagrams (จริงในโปรเจ็กต์)
+
+## 1. Angular Application Structure (จริงในโปรเจ็กต์)
+
+```mermaid
+graph TB
+    subgraph "Angular Frontend"
+        APP[App Component]
+        ROUTES[App Routes]
+        CONFIG[App Config]
+        
+        subgraph "Core Module"
+            MODELS[Models]
+            SERVICES[Services]
+        end
+        
+        subgraph "Models (core/models/)"
+            EVENT_MODEL[event.model.ts]
+            USER_MODEL[user.model.ts]  
+            BOOKING_MODEL[booking.model.ts]
+            INDEX_MODEL[index.ts]
+        end
+        
+        subgraph "Services (core/services/)"
+            API_SERV[api.service.ts]
+            AUTH_SERV[auth.service.ts]
+            EVENT_SERV[event.service.ts]
+            BOOKING_SERV[booking.service.ts]
+            USER_SERV[user.service.ts]
+            ADMIN_SERV[admin-state.service.ts]
+        end
+        
+        subgraph "Feature Modules"
+            HOME_FEATURE[Home Feature]
+            EVENTS_FEATURE[Events Feature]
+            DASHBOARD_FEATURE[Dashboard Feature]
+            ADMIN_FEATURE[Admin Feature]
+        end
+        
+        subgraph "Shared Module"
+            SHARED_COMP[Shared Components]
+            LAYOUT[Layout Components]
+            NAVBAR[Navbar Component]
+            FOOTER[Footer Component]
+            DEV_TOGGLE[Dev Mode Toggle]
+            USER_SELECTOR[User Selector]
+            REALTIME[Real-time Availability]
+        end
+    end
+    
+    APP --> ROUTES
+    APP --> CONFIG
+    APP --> MODELS
+    APP --> SERVICES
+    
+    MODELS --> EVENT_MODEL
+    MODELS --> USER_MODEL
+    MODELS --> BOOKING_MODEL
+    MODELS --> INDEX_MODEL
+    
+    SERVICES --> API_SERV
+    SERVICES --> AUTH_SERV
+    SERVICES --> EVENT_SERV
+    SERVICES --> BOOKING_SERV
+    SERVICES --> USER_SERV
+    SERVICES --> ADMIN_SERV
+    
+    APP --> HOME_FEATURE
+    APP --> EVENTS_FEATURE
+    APP --> DASHBOARD_FEATURE
+    APP --> ADMIN_FEATURE
+    
+    SHARED_COMP --> LAYOUT
+    SHARED_COMP --> NAVBAR
+    SHARED_COMP --> FOOTER
+    SHARED_COMP --> DEV_TOGGLE
+    SHARED_COMP --> USER_SELECTOR
+    SHARED_COMP --> REALTIME
+    
+    API_SERV --> EVENT_SERV
+    API_SERV --> BOOKING_SERV
+    API_SERV --> USER_SERV
+    
+    style APP fill:#e1f5fe
+    style MODELS fill:#f3e5f5
+    style SERVICES fill:#e8f5e8
+    style HOME_FEATURE fill:#fff3e0
+    style SHARED_COMP fill:#f1f8e9
+```
+
+## 2. Component Hierarchy (จริงในโปรเจ็กต์)
+
+```mermaid
+graph TB
+    ROOT[App Root]
+    
+    subgraph "Layout Components (shared/components/)"
+        LAYOUT[Layout Component]
+        NAVBAR[Navbar Component]
+        FOOTER[Footer Component]
+        DEV_TOGGLE[Dev Mode Toggle]
+        USER_SELECTOR[User Selector]
+        REALTIME[Real-time Availability]
+    end
+    
+    subgraph "Feature Pages"
+        HOME[Home Feature]
+        EVENTS[Events Feature]
+        DASHBOARD[Dashboard Feature]
+        ADMIN[Admin Feature]
+    end
+    
+    subgraph "Home Components"
+        HOME_COMP[Home Page Component]
+    end
+    
+    subgraph "Events Components"
+        EVENT_LIST[Event List Component]
+        EVENT_CARD[Event Card Component]
+        EVENT_DETAIL[Event Detail Component]
+    end
+    
+    subgraph "Dashboard Components"
+        DASH_COMP[Dashboard Component]
+        BOOKING_LIST[User Bookings List]
+        BOOKING_DETAIL[Booking Detail]
+    end
+    
+    subgraph "Admin Components"
+        ADMIN_DASH[Admin Dashboard]
+        EVENT_MGMT[Event Management]
+        USER_MGMT[User Management]
+        BOOKING_MGMT[Booking Management]
+    end
+    
+    ROOT --> LAYOUT
+    LAYOUT --> NAVBAR
+    LAYOUT --> FOOTER
+    NAVBAR --> DEV_TOGGLE
+    NAVBAR --> USER_SELECTOR
+    
+    ROOT --> HOME
+    ROOT --> EVENTS
+    ROOT --> DASHBOARD
+    ROOT --> ADMIN
+    
+    HOME --> HOME_COMP
+    HOME_COMP --> REALTIME
+    
+    EVENTS --> EVENT_LIST
+    EVENT_LIST --> EVENT_CARD
+    EVENTS --> EVENT_DETAIL
+    
+    DASHBOARD --> DASH_COMP
+    DASHBOARD --> BOOKING_LIST
+    BOOKING_LIST --> BOOKING_DETAIL
+    
+    ADMIN --> ADMIN_DASH
+    ADMIN --> EVENT_MGMT
+    ADMIN --> USER_MGMT
+    ADMIN --> BOOKING_MGMT
+    
+    style ROOT fill:#e1f5fe
+    style LAYOUT fill:#f3e5f5
+    style HOME fill:#e8f5e8
+    style EVENTS fill:#fff3e0
+    style DASHBOARD fill:#f1f8e9
+    style ADMIN fill:#fce4ec
+```
+
+## 3. State Management Flow
+
+```mermaid
+graph LR
+    subgraph "Component Layer"
+        COMP[Angular Components]
+    end
+    
+    subgraph "Service Layer"
+        SERV[Angular Services]
+        STATE[State Management]
+    end
+    
+    subgraph "HTTP Layer"
+        HTTP[HTTP Client]
+        INTER[Interceptors]
+    end
+    
+    subgraph "Backend API"
+        API[REST API Endpoints]
+    end
+    
+    COMP --> SERV
+    SERV --> STATE
+    SERV --> HTTP
+    HTTP --> INTER
+    INTER --> API
+    
+    API --> INTER
+    INTER --> HTTP
+    HTTP --> SERV
+    SERV --> STATE
+    STATE --> COMP
+    
+    style COMP fill:#e1f5fe
+    style SERV fill:#f3e5f5
+    style HTTP fill:#e8f5e8
+    style API fill:#fff3e0
+```
+
+## 4. User Journey Flow
+
+```mermaid
+graph TB
+    START([User Visits Site])
+    BROWSE[Browse Events]
+    SELECT[Select Event]
+    LOGIN{User Logged In?}
+    REGISTER[Register/Login]
+    BOOKING_FORM[Fill Booking Form]
+    PAYMENT[Payment Process]
+    CONFIRM[Booking Confirmation]
+    TICKETS[View Tickets]
+    END([Complete])
+    
+    START --> BROWSE
+    BROWSE --> SELECT
+    SELECT --> LOGIN
+    LOGIN -->|No| REGISTER
+    LOGIN -->|Yes| BOOKING_FORM
+    REGISTER --> BOOKING_FORM
+    BOOKING_FORM --> PAYMENT
+    PAYMENT --> CONFIRM
+    CONFIRM --> TICKETS
+    TICKETS --> END
+    
+    style START fill:#e8f5e8
+    style END fill:#e8f5e8
+    style PAYMENT fill:#ffebee
+    style CONFIRM fill:#e1f5fe
+```
+

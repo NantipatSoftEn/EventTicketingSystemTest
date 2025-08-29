@@ -35,14 +35,21 @@ GET /api/v1/bookings/user/1
 | `POST /api/v1/users` | Create user |
 | `GET /api/v1/users/{id}` | Get user by ID |
 | `GET /api/v1/events` | List all events |
-| `POST /api/v1/events` | Create event |
+| `POST /api/v1/events` | Create event (admin only) |
 | `GET /api/v1/events/{id}` | Get event by ID |
-| `PUT /api/v1/events/{id}` | Update event |
+| `PUT /api/v1/events/{id}` | Update event (admin only) |
+| `PATCH /api/v1/events/{id}` | Partially update event (admin only) |
 | `DELETE /api/v1/events/{id}` | Delete event (admin only) |
+| `GET /api/v1/events/management/view` | Get events with statistics for management |
 | `POST /api/v1/bookings` | Create booking |
+| `GET /api/v1/bookings/{id}` | Get booking by ID |
 | `GET /api/v1/bookings/user/{id}` | Get user bookings |
-| `GET /api/v1/bookings/event/{id}` | Get event bookings |
-| `PUT /api/v1/bookings/{id}/status` | Update booking status |
+| `GET /api/v1/bookings/event/{id}` | Get event bookings (admin only) |
+| `GET /api/v1/bookings/event/{id}/stats` | Get booking statistics for event |
+| `PUT /api/v1/bookings/{id}/status` | Update booking status (admin only) |
+| `GET /api/v1/availability/{id}` | Get event availability |
+| `GET /api/v1/availability` | Get multiple events availability |
+| `GET /api/v1/availability/all/active` | Get all active events availability |
 
 ## New Endpoints
 

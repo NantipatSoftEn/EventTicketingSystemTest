@@ -1,6 +1,35 @@
 # Event Ticketing System - Backend API
 
-A comprehensive event ticketing system backend built with FastAPI, featuring user management, event creation, booking system, and ticket generation with clean architecture principles.
+A comprehensive event ticketing system backend built with ***FastAPI***, featuring user management, event creation, booking system, and ticket generation with clean architecture principles.
+
+## 📑 Table of Contents
+
+- [📚 Documentation](#-documentation)
+- [🚀 Features](#-features)
+- [📋 Requirements](#-requirements)
+- [🛠️ Installation & Setup](#️-installation--setup)
+- [📚 API Documentation](#-api-documentation)
+- [🎫 Events API](#-events-api)
+- [📅 Bookings API](#-bookings-api)
+- [👥 Users API](#-users-api)
+- [📋 Complete API Reference](#-complete-api-reference)
+- [🏗️ Database Schema](#️-database-schema)
+- [🔧 Business Logic Features](#-business-logic-features)
+- [📊 Sample Data](#-sample-data)
+- [🔍 Testing the API](#-testing-the-api)
+- [🔄 Migration Guide](#-migration-guide)
+- [🚀 Production Considerations](#-production-considerations)
+- [📁 Project Structure](#-project-structure)
+- [🤝 API Design Decisions](#-api-design-decisions)
+- [🔧 Development Commands](#-development-commands)
+- [🗄️ Database Management](#️-database-management)
+
+## 📚 Documentation
+
+### Core Documentation
+- **[Database Management Guide](docs/DATABASE_README.md)** - Complete database schema, migrations, and management documentation
+- **[API Versioning Guide](docs/API_VERSIONING_GUIDE.md)** - API versioning strategy, migration guide, and response format details
+- **[System Diagrams](docs/SYSTEM_DIAGRAMS.md)** - Entity relationship diagrams, API flow charts, and system architecture diagrams
 
 ## 🚀 Features
 
@@ -67,8 +96,15 @@ The API will be available at:
 
 ## 📚 API Documentation
 
+### Documentation Links
+
+- **[Database Management Guide](docs/DATABASE_README.md)** - Complete database schema, migrations, and management documentation
+- **[API Versioning Guide](docs/API_VERSIONING_GUIDE.md)** - API versioning strategy, migration guide, and response format details
+- **[System Diagrams](docs/SYSTEM_DIAGRAMS.md)** - Entity relationship diagrams, API flow charts, and system architecture diagrams
+
 ### Base URL
-```
+
+```text
 http://localhost:8000/api/v1
 ```
 
@@ -698,4 +734,4 @@ PGPASSWORD=ticketing_password psql -h localhost -p 5432 -U ticketing_user -d eve
 
 ---
 
-**Ready to use!** The backend API is now fully functional with all the requirements from the README implemented, including comprehensive business logic, data validation, and sample data for testing.
+### 

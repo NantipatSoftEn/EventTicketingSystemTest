@@ -7,7 +7,7 @@ This guide explains how to manage the database schema and migrations for the Eve
 
 ### 1. Start the Database
 ```bash
-cd /Users/Army/EventTicketingSystemTest/back-end
+cd EventTicketingSystemTest/back-end
 docker-compose up -d
 ```
 
