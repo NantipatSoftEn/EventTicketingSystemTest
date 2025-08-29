@@ -16,10 +16,29 @@
 BEGIN;
 
 -- Create ENUM types
-CREATE TYPE user_role AS ENUM ('customer', 'admin');
-CREATE TYPE event_status AS ENUM ('active', 'cancelled', 'completed');
-CREATE TYPE booking_status AS ENUM ('confirmed', 'cancelled');
-CREATE TYPE ticket_status AS ENUM ('active', 'used', 'cancelled');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('customer', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE event_status AS ENUM ('active', 'cancelled', 'completed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE booking_status AS ENUM ('confirmed', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE ticket_status AS ENUM ('active', 'used', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create Users table
 CREATE TABLE users (

@@ -60,7 +60,7 @@ INSERT INTO events (title, description, venue, date_time, capacity, price, statu
     ),
     (
         'New Year Celebration Gala', 
-        'Elegant New Year\'s Eve celebration with dinner, entertainment, and fireworks',
+        'Elegant New Year''s Eve celebration with dinner, entertainment, and fireworks',
         'Grand Ballroom Hotel Luxe',
         '2025-12-31 19:00:00+00',
         500,

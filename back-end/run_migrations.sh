@@ -94,13 +94,25 @@ apply_migration() {
     print_message $YELLOW "📄 Applying migration: $migration_name"
     
     # Copy migration file to container and execute it
-    if docker cp "$migration_file" event_ticketing_postgres:/tmp/migration.sql && \
-       docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -f "/tmp/migration.sql" >/dev/null 2>&1; then
-        mark_migration_applied "$migration_name"
-        print_message $GREEN "✓ Successfully applied $migration_name"
-        return 0
+    local temp_file="/tmp/${migration_name}.sql"
+    if docker cp "$migration_file" "event_ticketing_postgres:$temp_file"; then
+        # Execute the migration and capture output
+        local migration_output
+        migration_output=$(docker-compose exec -T postgres psql -U $DB_USER -d $DB_NAME -f "$temp_file" 2>&1)
+        local exit_code=$?
+        
+        if [ $exit_code -eq 0 ]; then
+            mark_migration_applied "$migration_name"
+            print_message $GREEN "✓ Successfully applied $migration_name"
+            return 0
+        else
+            print_message $RED "✗ Failed to apply $migration_name"
+            print_message $RED "Error output:"
+            echo "$migration_output"
+            return 1
+        fi
     else
-        print_message $RED "✗ Failed to apply $migration_name"
+        print_message $RED "✗ Failed to copy migration file $migration_name"
         return 1
     fi
 }

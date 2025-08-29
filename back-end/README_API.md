@@ -287,24 +287,28 @@ CREATE TYPE ticket_status AS ENUM ('active', 'used', 'cancelled');
 ## 🔧 Business Logic Features
 
 ### Ticket Availability Validation
+
 - Automatically checks available capacity before booking
 - Prevents overbooking with database-level constraints
 - Returns clear error messages for insufficient tickets
 - Real-time capacity tracking with computed fields
 
 ### Secure Ticket Code Generation
+
 - Auto-generated unique ticket codes in format: `TKT-YYYYMMDD-XXXXXXXX`
 - Cryptographically secure random generation
 - Database-level uniqueness validation
 - Automatic assignment upon booking confirmation
 
 ### Performance Optimization
+
 - Computed fields for real-time statistics (total_tickets_sold, total_revenue, total_bookings)
 - Automatic updates via database triggers
 - Eliminates N+1 query problems
 - Strategic indexes for optimal query performance
 
 ### Data Validation
+
 - Comprehensive input validation using Pydantic v2
 - Phone number uniqueness enforcement
 - Positive quantity and price validation
@@ -312,6 +316,7 @@ CREATE TYPE ticket_status AS ENUM ('active', 'used', 'cancelled');
 - Role-based access control
 
 ### Booking Management
+
 - Automatic total amount calculation based on event price
 - Individual ticket generation for each booking quantity
 - Cascade status updates (cancelled bookings → cancelled tickets)
@@ -320,6 +325,7 @@ CREATE TYPE ticket_status AS ENUM ('active', 'used', 'cancelled');
 ## 📊 Sample Data
 
 The system includes comprehensive sample data:
+
 - **5 Users**: 4 customers + 1 admin
 - **5 Events**: Various event types with different capacities and prices
 - **7 Bookings**: Mix of confirmed and cancelled bookings
@@ -382,12 +388,6 @@ Visit `http://localhost:8000/docs` for a complete interactive API documentation 
 - Implement health checks and metrics endpoints
 - Set up container orchestration (Kubernetes/Docker Swarm)
 
-### Monitoring & Observability
-- Add structured logging with correlation IDs
-- Implement distributed tracing
-- Set up error monitoring (e.g., Sentry)
-- Add business metrics and analytics
-- Configure alerting and monitoring dashboards
 
 ## 📁 Project Structure
 
