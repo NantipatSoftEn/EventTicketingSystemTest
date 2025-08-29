@@ -15,6 +15,35 @@
     <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     <p class="mt-4 text-gray-600">Loading events...</p>
   </div>
+  <!-- Summary Stats -->
+  <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length! > 0" class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-600">Total Events</div>
+      <div class="text-2xl font-bold text-gray-900">{{ (events$ | async)?.length || 0 }}</div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-600">Active Events</div>
+      <div class="text-2xl font-bold text-green-600">
+        {{ activeEventsCount$ | async }}
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-600">Total Revenue</div>
+      <div class="text-2xl font-bold text-blue-600">
+        <!-- {{ formatPrice((totalRevenue$ | async) || 0) }} -->
+          Comming soon
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-600">Tickets Sold</div>
+      <div class="text-2xl font-bold text-purple-600">
+        {{ totalTicketsSold$ | async }}
+      </div>
+    </div>
+  </div>
 
   <!-- No Events -->
   <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length === 0" class="text-center py-12">
@@ -148,32 +177,5 @@
     </div>
   </div>
 
-  <!-- Summary Stats -->
-  <div *ngIf="!(isLoading$ | async) && (events$ | async)?.length! > 0" class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="text-sm text-gray-600">Total Events</div>
-      <div class="text-2xl font-bold text-gray-900">{{ (events$ | async)?.length || 0 }}</div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="text-sm text-gray-600">Active Events</div>
-      <div class="text-2xl font-bold text-green-600">
-        {{ activeEventsCount$ | async }}
-      </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="text-sm text-gray-600">Total Revenue</div>
-      <div class="text-2xl font-bold text-blue-600">
-        {{ formatPrice((totalRevenue$ | async) || 0) }}
-      </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="text-sm text-gray-600">Tickets Sold</div>
-      <div class="text-2xl font-bold text-purple-600">
-        {{ totalTicketsSold$ | async }}
-      </div>
-    </div>
-  </div>
 </div>
