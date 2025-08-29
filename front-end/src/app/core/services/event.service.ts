@@ -152,7 +152,7 @@ export class EventService {
     }
 
     let filteredEvents = [...events];
-    console.log('Starting with', filteredEvents.length, 'events');
+    // console.log('Starting with', filteredEvents.length, 'events');
 
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();

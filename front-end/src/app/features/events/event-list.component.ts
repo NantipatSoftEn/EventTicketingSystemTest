@@ -104,7 +104,7 @@ export class EventListComponent implements OnInit, OnDestroy {
       console.log('Date To Filter:', this.dateToInput, '-> Date object:', activeFilters.dateTo);
     }
 
-    console.log('Applying filters:', activeFilters);
+    // console.log('Applying filters:', activeFilters);
 
     this.eventService.getEvents(activeFilters).subscribe({
       next: (events: Event[]) => {
