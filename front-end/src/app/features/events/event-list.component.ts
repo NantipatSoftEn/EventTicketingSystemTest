@@ -74,7 +74,7 @@ export class EventListComponent implements OnInit, OnDestroy {
           this.applyFilters();
         });
 
-        console.log('Events loaded:', events);
+        // console.log('Events loaded:', events);
       },
       error: (error: any) => {
         console.error('Error loading events:', error);
@@ -108,7 +108,7 @@ export class EventListComponent implements OnInit, OnDestroy {
 
     this.eventService.getEvents(activeFilters).subscribe({
       next: (events: Event[]) => {
-        console.log('Filtered events result:', events.length, 'events found');
+        // console.log('Filtered events result:', events.length, 'events found');
         this.filteredEvents = events;
         this.isLoading = false;
       },

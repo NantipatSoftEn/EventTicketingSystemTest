@@ -104,6 +104,22 @@ export class CreateEventComponent {
     };
   }
 
+  autoFillForm(): void {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    this.eventForm = {
+      title: 'Summer Music Festival 2024',
+      description: 'Join us for an amazing summer music festival featuring top artists from around the world. Experience live performances, food trucks, and amazing atmosphere under the stars.',
+      venue: 'Central Park Amphitheater',
+      date: tomorrow.toISOString().split('T')[0],
+      time: '19:00',
+      price: 75.00,
+      totalTickets: 500,
+      image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop'
+    };
+  }
+
   getDefaultImage(): string {
     const images = [
       'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop',

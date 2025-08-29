@@ -154,14 +154,25 @@
 
       <!-- Form Actions -->
       <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          (click)="resetForm()"
-          [disabled]="isLoading"
-          class="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium transition-colors"
-        >
-          Reset Form
-        </button>
+        <div class="flex space-x-3">
+          <button
+            type="button"
+            (click)="autoFillForm()"
+            [disabled]="isLoading"
+            class="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium transition-colors"
+          >
+            Auto Fill
+          </button>
+          
+          <button
+            type="button"
+            (click)="resetForm()"
+            [disabled]="isLoading"
+            class="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium transition-colors"
+          >
+            Reset Form
+          </button>
+        </div>
 
         <div class="flex space-x-3">
           <button
