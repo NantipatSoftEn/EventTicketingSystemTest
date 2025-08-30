@@ -300,21 +300,43 @@ POST /api/v1/users
 
 ### API Endpoints Summary
 
+#### Events Management
 | Method | Endpoint | Description | Admin Required |
 |--------|----------|-------------|----------------|
-| `GET` | `/api` | Get API version information | No |
-| `GET` | `/api/v1/users` | List all users | No |
-| `POST` | `/api/v1/users` | Create new user | No |
-| `GET` | `/api/v1/users/{id}` | Get user by ID | No |
-| `GET` | `/api/v1/events` | List all events | No |
-| `POST` | `/api/v1/events` | Create new event | Yes |
-| `GET` | `/api/v1/events/{id}` | Get event details | No |
-| `PUT` | `/api/v1/events/{id}` | Update event | Yes |
-| `DELETE` | `/api/v1/events/{id}` | Delete event | Yes |
-| `POST` | `/api/v1/bookings` | Create booking | No |
-| `GET` | `/api/v1/bookings/user/{id}` | Get user bookings | No |
-| `GET` | `/api/v1/bookings/event/{id}` | Get event bookings | Yes |
-| `PUT` | `/api/v1/bookings/{id}/status` | Update booking status | Yes |
+| `POST` | `/api/v1/events` | Create a new event | ✅ |
+| `GET` | `/api/v1/events` | Get all events | ❌ |
+| `GET` | `/api/v1/events/{event_id}` | Get event by ID | ❌ |
+| `PUT` | `/api/v1/events/{event_id}` | Update event completely | ✅ |
+| `PATCH` | `/api/v1/events/{event_id}` | Partially update event | ✅ |
+| `DELETE` | `/api/v1/events/{event_id}` | Delete event | ✅ |
+| `GET` | `/api/v1/events/management/view` | Get events with management statistics | ✅ |
+
+#### User Management
+| Method | Endpoint | Description | Admin Required |
+|--------|----------|-------------|----------------|
+| `POST` | `/api/v1/users` | Create a new user | ❌ |
+| `GET` | `/api/v1/users` | Get all users | ❌ |
+| `GET` | `/api/v1/users/{user_id}` | Get user by ID | ❌ |
+
+#### Booking Management
+| Method | Endpoint | Description | Admin Required |
+|--------|----------|-------------|----------------|
+| `POST` | `/api/v1/bookings` | Create new booking with automatic ticket generation | ❌ |
+| `GET` | `/api/v1/bookings/{booking_id}` | Get booking by ID with full details | ❌ |
+| `GET` | `/api/v1/bookings/user/{user_id}` | Get all bookings for specific user | ❌ |
+| `GET` | `/api/v1/bookings/event/{event_id}` | Get all bookings for specific event | ✅ |
+| `GET` | `/api/v1/bookings/event/{event_id}/stats` | Get booking statistics for event | ❌ |
+| `PUT` | `/api/v1/bookings/{booking_id}/status` | Update booking status | ❌ |
+
+#### Event Availability
+| Method | Endpoint | Description | Admin Required |
+|--------|----------|-------------|----------------|
+| `GET` | `/api/v1/event-availability/{event_id}` | Get real-time availability for specific event | ❌ |
+| `GET` | `/api/v1/event-availability?event_ids=[]` | Get availability for multiple events | ❌ |
+| `GET` | `/api/v1/event-availability/all/active` | Get availability for all active events | ❌ |
+
+**Summary:** 20 Total Endpoints | 14 Public | 6 Admin Required
+
 
 ### Response Format Examples
 
