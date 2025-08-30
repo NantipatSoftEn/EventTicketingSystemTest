@@ -298,9 +298,10 @@ POST /api/v1/users
 
 ## 📋 Complete API Reference
 
-### API Endpoints Summary
+### API Endpoints Summary (Admin Required not yet implement)
 
 #### Events Management
+
 | Method | Endpoint | Description | Admin Required |
 |--------|----------|-------------|----------------|
 | `POST` | `/api/v1/events` | Create a new event | ✅ |
@@ -312,6 +313,7 @@ POST /api/v1/users
 | `GET` | `/api/v1/events/management/view` | Get events with management statistics | ✅ |
 
 #### User Management
+
 | Method | Endpoint | Description | Admin Required |
 |--------|----------|-------------|----------------|
 | `POST` | `/api/v1/users` | Create a new user | ❌ |
@@ -319,6 +321,7 @@ POST /api/v1/users
 | `GET` | `/api/v1/users/{user_id}` | Get user by ID | ❌ |
 
 #### Booking Management
+
 | Method | Endpoint | Description | Admin Required |
 |--------|----------|-------------|----------------|
 | `POST` | `/api/v1/bookings` | Create new booking with automatic ticket generation | ❌ |
@@ -329,6 +332,7 @@ POST /api/v1/users
 | `PUT` | `/api/v1/bookings/{booking_id}/status` | Update booking status | ❌ |
 
 #### Event Availability
+
 | Method | Endpoint | Description | Admin Required |
 |--------|----------|-------------|----------------|
 | `GET` | `/api/v1/event-availability/{event_id}` | Get real-time availability for specific event | ❌ |
