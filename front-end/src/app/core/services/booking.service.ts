@@ -288,9 +288,7 @@ export class BookingService {
         }
     }
 
-    getBookingStats(
-        eventId: number
-    ): Observable<{
+    getBookingStats(eventId: number): Observable<{
         totalBookings: number
         totalRevenue: number
         totalTickets: number
@@ -368,9 +366,7 @@ export class BookingService {
         return of(eventBookings).pipe(delay(500))
     }
 
-    private getMockBookingStats(
-        eventId: number
-    ): Observable<{
+    private getMockBookingStats(eventId: number): Observable<{
         totalBookings: number
         totalRevenue: number
         totalTickets: number

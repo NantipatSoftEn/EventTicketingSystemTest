@@ -20,6 +20,7 @@ from src.application.use_cases.user_use_cases import UserUseCases
 from src.application.use_cases.event_use_cases import EventUseCases
 from src.application.use_cases.booking_use_cases import BookingUseCases
 from src.application.use_cases.event_availability_use_cases import EventAvailabilityUseCases
+from src.application.use_cases.ticket_validation_use_cases import TicketValidationUseCases
 
 # Presentation - Controllers
 from src.presentation.controllers.user_controller import UserController
@@ -60,6 +61,12 @@ class DependencyContainer:
             self.event_repository,
             self.booking_repository
         )
+        self.ticket_validation_use_cases = TicketValidationUseCases(
+            self.ticket_repository,
+            self.booking_repository,
+            self.event_repository,
+            self.user_repository
+        )
         
         # Initialize controllers
         self.user_controller = UserController(self.user_use_cases)
@@ -70,3 +77,13 @@ class DependencyContainer:
 
 # Global container instance
 container = DependencyContainer()
+
+
+class Container:
+    """Simple container for dependency injection"""
+    
+    def __init__(self):
+        self._container = container
+    
+    def ticket_validation_use_cases(self) -> TicketValidationUseCases:
+        return self._container.ticket_validation_use_cases

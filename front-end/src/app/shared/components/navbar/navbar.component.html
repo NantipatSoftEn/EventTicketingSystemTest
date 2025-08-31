@@ -55,6 +55,14 @@
                     My Bookings
                 </a>
 
+                <a
+                    routerLink="/validate-ticket"
+                    routerLinkActive="text-blue-600 border-b-2 border-blue-600"
+                    class="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-600"
+                >
+                    ตรวจสอบตั๋ว
+                </a>
+
                 <!-- Admin Section (if admin user) -->
 
                 <a
@@ -167,10 +175,7 @@
             </a>
 
             <!-- Admin Section for Mobile -->
-            <div
-                *ngIf=""
-                class="mt-2 border-t border-gray-200 pt-2"
-            >
+            <div *ngIf="" class="mt-2 border-t border-gray-200 pt-2">
                 <p
                     class="px-3 py-1 text-xs font-semibold tracking-wider text-gray-500 uppercase"
                 >
