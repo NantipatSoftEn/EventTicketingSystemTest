@@ -64,11 +64,11 @@ class UserUseCases:
             for user in users
         ]
     
-    async def validate_admin_access(self, user_id: int) -> None:
-        """Validate that user has admin access"""
-        user = await self._user_repository.get_by_id(user_id)
-        if not user:
-            raise ValueError("User not found")
-        
-        if not user.is_admin():
-            raise ValueError("Admin access required")
+    # async def validate_admin_access(self, user_id: int) -> None:
+    #     """Validate that user has admin access"""
+    #     user = await self._user_repository.get_by_id(user_id)
+    #     if not user:
+    #         raise ValueError("User not found")
+    #     
+    #     if not user.is_admin():
+    #         raise ValueError("Admin access required")

@@ -96,7 +96,7 @@ class BookingController:
         """Get bookings for a specific event (admin only)"""
         try:
             # Validate admin access
-            await self._user_use_cases.validate_admin_access(admin_user_id)
+            # await self._user_use_cases.validate_admin_access(admin_user_id)
             
             bookings = await self._booking_use_cases.get_event_bookings(event_id)
             

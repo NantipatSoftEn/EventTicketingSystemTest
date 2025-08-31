@@ -17,7 +17,7 @@ class EventController:
         """Create a new event (admin only)"""
         try:
             # Validate admin access
-            await self._user_use_cases.validate_admin_access(admin_user_id)
+            # await self._user_use_cases.validate_admin_access(admin_user_id)
             
             event_dto = EventCreateDTO(
                 title=event_schema.title,
@@ -98,7 +98,7 @@ class EventController:
         """Update an existing event (admin only)"""
         try:
             # Validate admin access
-            await self._user_use_cases.validate_admin_access(admin_user_id)
+            # await self._user_use_cases.validate_admin_access(admin_user_id)
             
             event_dto = EventCreateDTO(
                 title=event_schema.title,
@@ -143,7 +143,7 @@ class EventController:
         """Partially update an existing event (admin only)"""
         try:
             # Validate admin access
-            await self._user_use_cases.validate_admin_access(admin_user_id)
+            # await self._user_use_cases.validate_admin_access(admin_user_id)
             
             event_dto = EventPatchDTO(
                 title=event_schema.title,
@@ -188,7 +188,7 @@ class EventController:
         """Delete an event (admin only)"""
         try:
             # Validate admin access
-            await self._user_use_cases.validate_admin_access(admin_user_id)
+            # await self._user_use_cases.validate_admin_access(admin_user_id)
             
             # Delete the event
             deleted = await self._event_use_cases.delete_event(event_id)
