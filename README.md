@@ -183,54 +183,54 @@ graph TB
 ```mermaid
 erDiagram
     USERS {
-        SERIAL id PK
-        VARCHAR name "NOT NULL"
-        VARCHAR phone "UNIQUE, NOT NULL"
-        user_role role "DEFAULT 'customer'"
-        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
-        TIMESTAMP updated_at "DEFAULT CURRENT_TIMESTAMP"
+        int id PK
+        string name
+        string phone UK
+        enum role
+        timestamp created_at
+        timestamp updated_at
     }
 
     EVENTS {
-        SERIAL id PK
-        VARCHAR title "NOT NULL"
-        TEXT description
-        VARCHAR venue "NOT NULL"
-        TIMESTAMP date_time "NOT NULL"
-        INTEGER capacity "NOT NULL, CHECK > 0"
-        DECIMAL price "NOT NULL, CHECK >= 0"
-        event_status status "DEFAULT 'active'"
-        INTEGER total_tickets_sold "DEFAULT 0"
-        DECIMAL total_revenue "DEFAULT 0"
-        INTEGER total_bookings "DEFAULT 0"
-        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
-        TIMESTAMP updated_at "DEFAULT CURRENT_TIMESTAMP"
+        int id PK
+        string title
+        text description
+        string venue
+        timestamp date_time
+        int capacity
+        decimal price
+        enum status
+        int total_tickets_sold
+        decimal total_revenue
+        int total_bookings
+        timestamp created_at
+        timestamp updated_at
     }
 
     BOOKINGS {
-        SERIAL id PK
-        INTEGER user_id FK "NOT NULL"
-        INTEGER event_id FK "NOT NULL"
-        INTEGER quantity "NOT NULL, CHECK > 0"
-        DECIMAL total_amount "NOT NULL, CHECK >= 0"
-        TIMESTAMP booking_date "DEFAULT CURRENT_TIMESTAMP"
-        booking_status status "DEFAULT 'confirmed'"
-        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
-        TIMESTAMP updated_at "DEFAULT CURRENT_TIMESTAMP"
+        int id PK
+        int user_id FK
+        int event_id FK
+        int quantity
+        decimal total_amount
+        timestamp booking_date
+        enum status
+        timestamp created_at
+        timestamp updated_at
     }
 
     TICKETS {
-        SERIAL id PK
-        INTEGER booking_id FK "NOT NULL"
-        VARCHAR ticket_code "UNIQUE, NOT NULL"
-        ticket_status status "DEFAULT 'active'"
-        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
-        TIMESTAMP updated_at "DEFAULT CURRENT_TIMESTAMP"
+        int id PK
+        int booking_id FK
+        string ticket_code UK
+        enum status
+        timestamp created_at
+        timestamp updated_at
     }
 
-    USERS ||--o{ BOOKINGS : "user_id"
-    EVENTS ||--o{ BOOKINGS : "event_id"
-    BOOKINGS ||--o{ TICKETS : "booking_id"
+    USERS ||--o{ BOOKINGS : "has many"
+    EVENTS ||--o{ BOOKINGS : "has many"
+    BOOKINGS ||--o{ TICKETS : "has many"
 ```
 
 ### 3. Backend Clean Architecture Structure
